@@ -1,5 +1,6 @@
 """Structured logging via structlog with stdlib bridging."""
 import logging
+from typing import cast
 
 import structlog
 
@@ -23,4 +24,4 @@ def configure_logging(level: str = "INFO") -> None:
 
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
-    return structlog.get_logger(name)
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(name))
