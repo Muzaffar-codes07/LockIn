@@ -34,3 +34,18 @@ npm-debug.log*
 # Testing
 coverage/
 .pytest_cache/
+
+# uv
+.uv-cache/
+uv.lock.bak
+
+# Ruff / mypy / pytest caches
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+htmlcov/
+.coverage
+.coverage.*
+
+# Pre-commit
+.secrets.baseline.bak
