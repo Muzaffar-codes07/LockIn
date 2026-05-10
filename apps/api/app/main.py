@@ -29,6 +29,13 @@ def create_app() -> FastAPI:
     fast_app = FastAPI(title="LockIn API", version="0.0.1", lifespan=lifespan)
     register_exception_handlers(fast_app)
     fast_app.include_router(api_router)
+
+    # Liveness route at root, matching the Dockerfile HEALTHCHECK probe path.
+    # /v1/health remains the canonical versioned endpoint for clients.
+    @fast_app.get("/health", include_in_schema=False)
+    async def _root_health() -> dict[str, str]:
+        return {"status": "ok"}
+
     return fast_app
 
 

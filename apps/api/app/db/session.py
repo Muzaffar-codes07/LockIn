@@ -1,6 +1,8 @@
-"""Async engine + session factory."""
+"""Async engine + session factory.
 
-from collections.abc import AsyncIterator
+The FastAPI dependency lives in `app/api/v1/deps.py` (`_db_session`); this
+module exposes only the raw factory used by `deps.py`, alembic, and tests.
+"""
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -14,8 +16,3 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False,
     autoflush=False,
 )
-
-
-async def get_session() -> AsyncIterator[AsyncSession]:
-    async with AsyncSessionLocal() as session:
-        yield session
