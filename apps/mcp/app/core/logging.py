@@ -1,4 +1,5 @@
 """Structured logging via structlog with stdlib bridging."""
+
 import logging
 from typing import cast
 

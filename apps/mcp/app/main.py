@@ -1,4 +1,5 @@
 """MCP entrypoint. Selects transport via MCP_TRANSPORT env var."""
+
 from app.core.config import settings
 from app.core.logging import configure_logging, get_logger
 

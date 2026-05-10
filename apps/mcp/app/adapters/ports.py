@@ -1,4 +1,5 @@
 """MCP-side adapter ports. Structural typing only."""
+
 from typing import Any, Protocol
 
 
