@@ -1,0 +1,35 @@
+# Overlay on top of docker-compose.yml. Brings up apps/api and apps/mcp
+# so that the entire local stack runs in one command:
+#   docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up -d
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    image: lockin-api:dev
+    env_file:
+      - ../../.env.local
+    environment:
+      DATABASE_URL: postgresql+asyncpg://lockin:lockin_dev@postgres:5432/lockin  # pragma: allowlist secret
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+
+  mcp:
+    build:
+      context: ../..
+      dockerfile: apps/mcp/Dockerfile
+    image: lockin-mcp:dev
+    env_file:
+      - ../../.env.local
+    environment:
+      MCP_TRANSPORT: sse
+      API_BASE_URL: http://api:8000
+    ports:
+      - "8081:8081"
+    depends_on:
+      - api
