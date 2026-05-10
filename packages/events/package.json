@@ -1,0 +1,8 @@
+{
+  "name": "@lockin/events",
+  "version": "0.0.1",
+  "private": true,
+  "description": "LockIn event schema (TypeScript source of truth).",
+  "main": "./schema.ts",
+  "types": "./schema.ts"
+}
