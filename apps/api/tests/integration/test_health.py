@@ -1,4 +1,5 @@
 """Smoke test: /v1/health returns 200 with {"status": "ok"}."""
+
 from httpx import AsyncClient
 
 

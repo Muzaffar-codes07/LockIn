@@ -2,6 +2,7 @@
 
 OpenTelemetry instrumentation hooks are wired here later when traces land.
 """
+
 import logging
 from typing import cast
 

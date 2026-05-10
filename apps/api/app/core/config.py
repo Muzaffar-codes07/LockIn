@@ -2,6 +2,7 @@
 
 Single global `settings` instance; import as `from app.core.config import settings`.
 """
+
 from functools import lru_cache
 
 from pydantic import Field

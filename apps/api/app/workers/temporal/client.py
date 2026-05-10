@@ -4,6 +4,7 @@ Targets Temporal Cloud in all non-local environments. TLS is enabled when
 both TEMPORAL_TLS_CERT and TEMPORAL_TLS_KEY are present in env.
 Local dev defaults to localhost:7233 with TLS off.
 """
+
 from temporalio.client import Client
 from temporalio.service import TLSConfig
 

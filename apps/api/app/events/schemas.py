@@ -3,6 +3,7 @@
 # so dual-maintenance ends with that promotion.
 
 """Python mirror of packages/events/schema.ts. Hand-maintained for now."""
+
 from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field

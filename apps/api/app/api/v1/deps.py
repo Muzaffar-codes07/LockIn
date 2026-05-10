@@ -1,4 +1,5 @@
 """FastAPI dependency providers: DB sessions, current user, idempotency."""
+
 from collections.abc import AsyncIterator
 from typing import Annotated
 

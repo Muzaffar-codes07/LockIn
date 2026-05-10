@@ -1,4 +1,5 @@
 """Redis Streams consumer scaffold. Workers/projections wire onto this per slice."""
+
 from collections.abc import AsyncIterator
 from typing import Any
 

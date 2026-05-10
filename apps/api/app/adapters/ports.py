@@ -1,4 +1,5 @@
 """Adapter port definitions. Structural typing only — no inheritance."""
+
 from datetime import date
 from typing import Any, Protocol
 

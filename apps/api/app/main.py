@@ -2,6 +2,7 @@
 
 `app` at module scope is what uvicorn imports (`uvicorn app.main:app`).
 """
+
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 

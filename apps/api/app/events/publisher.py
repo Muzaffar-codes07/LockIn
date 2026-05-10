@@ -1,4 +1,5 @@
 """Redis Streams publisher. Always called by services after a successful DB commit."""
+
 from redis.asyncio import Redis
 
 from app.core.config import settings
