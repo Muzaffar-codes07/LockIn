@@ -15,7 +15,7 @@ LockIn is a **personal productivity agent** that schedules your day based on how
 
 It is designed from day one to be both a **standalone product** and a **tool callable by other AI agents** (Claude, ChatGPT, Gemini) via the Model Context Protocol.
 
-**Competitive wedge:** Longitudinal behavioral data that nobody else captures. Mood, energy, completion patterns, and context gathered over weeks and months. General-purpose agents cannot replicate this without explicit tracking infrastructure. Competing schedulers (Motion, Reclaim, Saner) ignore mood and energy entirely.
+**Durable moat:** Longitudinal behavioral data that nobody else captures. Mood, energy, completion patterns, and context gathered over weeks and months. General-purpose agents cannot replicate this without explicit tracking infrastructure. Competing schedulers (Motion, Reclaim, Saner) ignore mood and energy entirely. (The P1 wedge product is what captures this data; see [`glossary.md`](glossary.md).)
 
 **Built for 2030 standards:** agent-native, memory-first, MCP-compatible, voice-default, privacy-preserving by design.
 
@@ -78,7 +78,7 @@ The v1 "Peak Performer / High Achiever / Steady Contributor / Struggling Profess
 
 The constraint-bearing form of these principles — the rules that govern implementation — lives in [`CLAUDE.md`](../CLAUDE.md) under **"Non-Negotiable Principles"**. This section captures the *strategic framing* for each: what we believe about users, the market, and where defensibility comes from.
 
-1. **Agent-Native.** Productivity tools that report state lose to tools that take action. LockIn's wedge is doing the work, not showing the work.
+1. **Agent-Native.** Productivity tools that report state lose to tools that take action. LockIn's strategic stance is doing the work, not showing the work.
 
 2. **Memory-First.** Longitudinal behavioral data is the durable advantage. General-purpose agents cannot replicate it without capture infrastructure. The graph compounds; the schedule is a side effect.
 

@@ -6,7 +6,7 @@ This file is loaded automatically by Claude Code. Keep it current; it's the sing
 
 LockIn is a **mood-and-energy-aware productivity agent** that schedules your day based on how you actually work, explains every decision, and exposes itself as an MCP tool callable by Claude, ChatGPT, and Gemini.
 
-**The wedge:** Longitudinal behavioral data (mood, energy, completion patterns over weeks/months) that general-purpose agents cannot replicate without capture infrastructure.
+**The moat:** Longitudinal behavioral data (mood, energy, completion patterns over weeks/months) that general-purpose agents cannot replicate without capture infrastructure. The P1 product is the *wedge* that captures this data; the accumulated dataset over time is the *moat*. See [`docs/glossary.md`](docs/glossary.md) for the distinction.
 
 **Platform strategy:** Web-first (Next.js + React), responsive for desktop and mobile browser. Native mobile deferred to P3.
 
