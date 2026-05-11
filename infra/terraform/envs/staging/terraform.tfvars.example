@@ -1,0 +1,3 @@
+project_id = "lockin-staging-XXXXXX"
+region     = "us-central1"
+dns_name   = "staging.lockin.app."
