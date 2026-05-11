@@ -74,17 +74,19 @@ The v1 "Peak Performer / High Achiever / Steady Contributor / Struggling Profess
 
 ## 4. Core Product
 
-### Product Principles (Non-Negotiable)
+### Product Principles
 
-1. **Agent-Native.** LockIn schedules, reschedules, drafts focus blocks, triages low-value meetings, and suggests task deferrals *without being asked*. It acts; it does not merely report.
+The constraint-bearing form of these principles — the rules that govern implementation — lives in [`CLAUDE.md`](../CLAUDE.md) under **"Non-Negotiable Principles"**. This section captures the *strategic framing* for each: what we believe about users, the market, and where defensibility comes from.
 
-2. **Memory-First.** Every task, mood check, completion, interruption, and reschedule persists across devices, indefinitely. The behavior graph *is* the product.
+1. **Agent-Native.** Productivity tools that report state lose to tools that take action. LockIn's wedge is doing the work, not showing the work.
 
-3. **Explainable.** Every action carries a one-line "why" tied to the user's actual history. Opacity is the fastest path to churn in an AI-saturated market.
+2. **Memory-First.** Longitudinal behavioral data is the durable advantage. General-purpose agents cannot replicate it without capture infrastructure. The graph compounds; the schedule is a side effect.
 
-4. **Composable (MCP).** LockIn exposes its scheduling, memory, and explanation tools via Model Context Protocol from day one. Callable from Claude, ChatGPT, Gemini, and future agents.
+3. **Explainable.** Opacity is the fastest path to churn in an AI-saturated market. Users tolerate AI suggestions only when the "why" is visible and grounded in their own behavior.
 
-5. **Privacy-Preserving by Default.** Mood and energy inference runs on-device where model size permits. Behavioral graphs are exportable on request. Data is never sold.
+4. **Composable (MCP).** In 2026, the productivity surface is the agent layer. A LockIn that isn't callable from Claude, ChatGPT, and Gemini is invisible to the actual workflow.
+
+5. **Privacy-Preserving by Default.** Behavioral data is high-trust material. Selling it is product-suicide in the EU and a slow trust-erosion in the US. On-device where feasible, export on demand, never sold.
 
 ### Core User Loop
 
@@ -145,28 +147,11 @@ Three major services, all agent-first:
 
 ### Stack
 
-| Layer | Choice | Rationale |
-|---|---|---|
-| Mobile | Flutter (iOS + Android) | Single codebase, performant for animations |
-| Web (P2) | Next.js + React | Standard, SEO-friendly |
-| Backend | FastAPI (Python) + Temporal | Python for ML integration, Temporal for agent workflows |
-| Primary DB | Postgres 16 | ACID, mature, JSON support |
-| Time-series | TimescaleDB | Postgres extension, SQL interface |
-| Cache / Streams | Redis | Sub-ms latency, pub/sub |
-| ML | LightGBM + LLM polish | Fast training, production-stable |
-| Voice | Whisper (on-device) + Deepgram (cloud fallback) | Privacy by default, quality when needed |
-| Explanation LLM | Claude Haiku / GPT-4o-mini | Cost-optimized |
-| Infra | GCP or AWS, Kubernetes, Terraform | Standard, multi-region ready |
-| Observability | OpenTelemetry + Grafana + Sentry | Open, vendor-neutral |
-| MCP | Dedicated MCP server | First-class, not retrofit |
+The authoritative tech stack lives in [`CLAUDE.md`](../CLAUDE.md) under **"Tech Stack (Locked)"**. This section previously duplicated that content; it now defers to the canonical source to prevent drift. Deeper trade-off notes live in [`docs/LockIn_Technical_Roadmap.md`](LockIn_Technical_Roadmap.md).
 
 ### Architectural Non-Negotiables
 
-1. **MCP-compatible from day one** — no retrofit, no bolt-on.
-2. **On-device inference** for mood/energy where feasible.
-3. **Voice and ambient capture** as default input paths.
-4. **Context graph, not task list** — tasks, meetings, people, mood as a unified graph.
-5. **Open data portability** — users export their full behavioral graph on demand.
+The authoritative list of locked product and architectural principles lives in [`CLAUDE.md`](../CLAUDE.md) under **"Non-Negotiable Principles"**. That list covers agent-native action, memory-first behavior graph, explainability, MCP as a first-class service, graceful degradation, idempotency, on-device inference for mood/energy, voice and ambient capture as default input paths, and open data portability.
 
 ---
 
