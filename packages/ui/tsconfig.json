@@ -1,15 +1,12 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
+    "outDir": "dist",
+    "rootDir": "src",
+    "jsx": "react-jsx",
     "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "jsx": "preserve",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "outDir": "./dist"
+    "moduleResolution": "Bundler"
   },
-  "include": ["src"]
+  "include": ["src/**/*"],
+  "exclude": ["**/*.test.tsx", "**/*.test.ts", "**/*.stories.tsx"]
 }

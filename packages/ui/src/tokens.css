@@ -1,0 +1,63 @@
+/* LockIn design tokens — Tailwind v4 @theme block.
+ * Consumed by apps/web via `@import "@lockin/ui/tokens.css";`.
+ * Dark mode variants are scaffolded; refinement is a P2 task. */
+
+@theme {
+  /* Brand */
+  --color-brand-50: oklch(0.97 0.02 270);
+  --color-brand-500: oklch(0.62 0.18 270);
+  --color-brand-900: oklch(0.25 0.10 270);
+
+  /* Semantic surfaces */
+  --color-surface: oklch(0.99 0.00 0);
+  --color-surface-muted: oklch(0.96 0.00 0);
+  --color-text: oklch(0.15 0.00 0);
+  --color-text-muted: oklch(0.45 0.00 0);
+  --color-border: oklch(0.90 0.00 0);
+  --color-danger: oklch(0.55 0.20 25);
+  --color-success: oklch(0.60 0.16 145);
+
+  /* Type scale */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Cascadia Mono", monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+
+  /* Spacing scale (4px base) */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-medium: 200ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 9999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-surface: oklch(0.16 0.00 0);
+    --color-surface-muted: oklch(0.22 0.00 0);
+    --color-text: oklch(0.96 0.00 0);
+    --color-text-muted: oklch(0.70 0.00 0);
+    --color-border: oklch(0.30 0.00 0);
+  }
+}
