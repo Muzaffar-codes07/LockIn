@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Inherited from apps/web/pnpm-workspace.yaml (deleted during Week 1–2 root-workspace wiring).
+# These are pnpm v9 build-script approvals — leaving them in the ignored list keeps installs quiet.
+# Flip to allowed list (or run `pnpm approve-builds`) if/when we actually need the postinstall.
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver

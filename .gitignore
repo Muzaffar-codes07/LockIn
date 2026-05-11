@@ -49,3 +49,22 @@ htmlcov/
 
 # Pre-commit
 .secrets.baseline.bak
+
+# Graphify
+graphify-out/
+
+# Next.js export
+out/
+
+# TS incremental
+*.tsbuildinfo
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# Storybook
+storybook-static/
