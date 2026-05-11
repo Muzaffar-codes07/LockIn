@@ -1,8 +1,36 @@
 {
   "name": "@lockin/events",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
-  "description": "LockIn event schema (TypeScript source of truth).",
-  "main": "./schema.ts",
-  "types": "./schema.ts"
+  "description": "LockIn event schema — Zod source of truth, TS + Python types generated.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./json-schema/*": "./dist/json-schema/*.json"
+  },
+  "files": ["dist", "fixtures"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "gen:json-schema": "tsx scripts/emit-json-schema.ts",
+    "gen:python": "pwsh -NoLogo -NoProfile -File scripts/gen-python.ps1",
+    "gen": "pnpm gen:json-schema && pnpm gen:python && pnpm build",
+    "lint": "echo '(no lint configured yet)'",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5",
+    "zod-to-json-schema": "^3.24.1"
+  }
 }

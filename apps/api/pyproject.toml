@@ -39,6 +39,9 @@ dependencies = [
     "opentelemetry-sdk>=1.28",
     "opentelemetry-instrumentation-fastapi>=0.49b0",
     "structlog>=24.4",
+
+    # Shared workspace packages
+    "lockin-events",
 ]
 
 [project.optional-dependencies]
@@ -79,8 +82,7 @@ compile-bytecode = true
 package = true
 
 [tool.uv.sources]
-# Example of pulling a shared internal package from the monorepo:
-# lockin-events = { workspace = true }
+lockin-events = { workspace = true }
 
 # ---------------------------------------------------------------------------
 # Build system

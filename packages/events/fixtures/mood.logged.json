@@ -1,0 +1,14 @@
+{
+  "event_id": "01927a45-3d80-7c10-8a7e-3a9b1c2d4e65",
+  "event_type": "mood.logged",
+  "event_version": 1,
+  "user_id": "11111111-1111-4111-8111-111111111111",
+  "tenant_id": null,
+  "occurred_at": "2026-05-11T09:00:00+00:00",
+  "client_idempotency_key": "mood-morning-2026-05-11",
+  "source": "web",
+  "payload": {
+    "mood": 4,
+    "context": "morning"
+  }
+}

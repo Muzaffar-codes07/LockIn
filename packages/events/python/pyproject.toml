@@ -1,0 +1,26 @@
+[project]
+name = "lockin-events"
+version = "0.1.0"
+description = "LockIn event schema (Python) — generated from packages/events/src/schema.ts"
+requires-python = ">=3.12"
+readme = "../README.md"
+license = { text = "Proprietary" }
+dependencies = ["pydantic>=2.9"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3"]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lockin_events"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = ["-v", "--strict-markers"]
