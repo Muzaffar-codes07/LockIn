@@ -10,5 +10,10 @@ from app.main import app
 
 @pytest_asyncio.fixture
 async def client() -> AsyncIterator[AsyncClient]:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    # raise_app_exceptions=False makes uncaught exceptions surface as 500
+    # responses, matching production ASGI servers. Without it, ASGITransport
+    # re-raises into the test, which is the wrong contract for /v1/__debug__/
+    # exception-path tests.
+    transport = ASGITransport(app=app, raise_app_exceptions=False)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac

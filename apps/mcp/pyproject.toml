@@ -21,6 +21,10 @@ dependencies = [
     # Observability
     "opentelemetry-api>=1.28",
     "opentelemetry-sdk>=1.28",
+    "opentelemetry-instrumentation-asgi>=0.49b0",
+    "opentelemetry-instrumentation-httpx>=0.49b0",
+    "opentelemetry-exporter-otlp-proto-http>=1.28",
+    "sentry-sdk>=2.18",
     "structlog>=24.4",
 
     # SSE transport (production)
