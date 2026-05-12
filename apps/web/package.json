@@ -6,7 +6,7 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
@@ -16,6 +16,7 @@
     "@lockin/events": "workspace:*",
     "@lockin/shared-types": "workspace:*",
     "@lockin/ui": "workspace:*",
+    "@sentry/nextjs": "^10.52.0",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4"
