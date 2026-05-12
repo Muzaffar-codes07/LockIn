@@ -26,7 +26,13 @@ dependencies = [
     # SSE transport (production)
     "uvicorn[standard]>=0.32",
     "starlette>=0.41",
+
+    # Shared workspace packages
+    "lockin-events",
 ]
+
+[tool.uv.sources]
+lockin-events = { workspace = true }
 
 [project.optional-dependencies]
 dev = [

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env", ".env.local", "tsconfig.base.json"],
+  "globalEnv": ["NODE_ENV", "CI"],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "env": ["NEXT_PUBLIC_*", "SENTRY_*"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": ["*.tsbuildinfo"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "gen": {
+      "outputs": ["dist/**", "python/lockin_events/generated.py", "dist/json-schema/**"]
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

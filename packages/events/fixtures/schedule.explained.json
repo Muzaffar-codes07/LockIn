@@ -1,0 +1,21 @@
+{
+  "event_id": "01927a45-3d80-7c10-8a7e-3a9b1c2d4e67",
+  "event_type": "schedule.explained",
+  "event_version": 1,
+  "user_id": "11111111-1111-4111-8111-111111111111",
+  "tenant_id": null,
+  "occurred_at": "2026-05-11T10:30:05+00:00",
+  "client_idempotency_key": "explain-22222222-2222-4222-8222-222222222222",
+  "source": "agent",
+  "payload": {
+    "explanation_id": "33333333-3333-4333-8333-333333333333",
+    "task_id": "22222222-2222-4222-8222-222222222222",
+    "factors": [
+      { "name": "energy_window", "weight": 0.42, "value": "afternoon" },
+      { "name": "task_complexity", "weight": 0.31, "value": "medium" },
+      { "name": "calendar_collision", "weight": 0.27, "value": false }
+    ],
+    "model_version": "lgbm-v0.1.0",
+    "rendered_text": "Scheduled at 14:00 because your afternoon energy is high and your calendar is free."
+  }
+}

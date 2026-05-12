@@ -1,8 +1,10 @@
 # Current Slice — Vertical Slice 0: Auth + Task Capture Spine
 
-**Status:** Active
+> **⚠️ Foundation status (2026-05-11):** The Week 1–2 Foundation slice is **partially shipped**. Monorepo wiring, event schema v1 (9 types, TS↔Python round-trip green), `@lockin/ui` base components, GitHub Actions PR pipeline, and GCP Terraform modules are done. Auth (NextAuth + Google OAuth + passkeys), full observability (Sentry + OTel + Grafana), Storybook deploy, secrets-pull CLI, and the TimescaleDB hypertable migration are **not yet shipped**. Read [`docs/handoffs/week-1-2.md`](handoffs/week-1-2.md) before starting this slice — Slice 0 depends on auth being in place, so Tasks 9 + 10 of the foundation plan should land first.
+
+**Status:** Blocked on Foundation Tasks 9 + 10 (auth + passkeys)
 **Owner:** [assigned engineer]
-**Est. duration:** 3–5 days
+**Est. duration:** 3–5 days (after auth lands)
 
 ## The Goal
 

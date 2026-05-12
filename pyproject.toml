@@ -1,0 +1,9 @@
+# Root pyproject.toml — uv workspace discovery only. No project metadata here.
+# Each member has its own [project] table and lockfile-managed deps.
+
+[tool.uv.workspace]
+members = [
+    "apps/api",
+    "apps/mcp",
+    "packages/events/python",
+]

@@ -1,0 +1,193 @@
+name: pr
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.changes.outputs.web }}
+      api: ${{ steps.changes.outputs.api }}
+      mcp: ${{ steps.changes.outputs.mcp }}
+      packages: ${{ steps.changes.outputs.packages }}
+      infra: ${{ steps.changes.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+              - 'pnpm-lock.yaml'
+              - 'turbo.json'
+              - 'tsconfig.base.json'
+              - 'package.json'
+            api:
+              - 'apps/api/**'
+              - 'packages/events/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            mcp:
+              - 'apps/mcp/**'
+              - 'packages/events/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            packages:
+              - 'packages/**'
+            infra:
+              - 'infra/terraform/**'
+
+  js:
+    needs: detect
+    if: needs.detect.outputs.web == 'true' || needs.detect.outputs.packages == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.11.x"
+      - run: pnpm install --frozen-lockfile
+      - name: Generate event schema artifacts (json-schema only — Python codegen needs uvx)
+        run: pnpm -F @lockin/events gen:json-schema
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  python-api:
+    needs: detect
+    if: needs.detect.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.11.x"
+      - run: pnpm install --frozen-lockfile
+      - name: Regenerate Python event models
+        run: |
+          pnpm -F @lockin/events gen:json-schema
+          bash packages/events/scripts/gen-python.sh
+      - run: uv sync --all-packages --extra dev
+      - run: uv run --package lockin-api python -m ruff check apps/api
+      - run: uv run --package lockin-api python -m mypy apps/api/app
+      - run: uv run --package lockin-api python -m pytest apps/api/tests
+
+  python-mcp:
+    needs: detect
+    if: needs.detect.outputs.mcp == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.11.x"
+      - run: pnpm install --frozen-lockfile
+      - name: Regenerate Python event models
+        run: |
+          pnpm -F @lockin/events gen:json-schema
+          bash packages/events/scripts/gen-python.sh
+      - run: uv sync --all-packages --extra dev
+      - run: uv run --package lockin-mcp python -m ruff check apps/mcp
+      - run: uv run --package lockin-mcp python -m mypy apps/mcp/app
+      - run: uv run --package lockin-mcp python -m pytest apps/mcp/tests
+
+  events-roundtrip:
+    needs: detect
+    if: needs.detect.outputs.packages == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.11.x"
+      - run: pnpm install --frozen-lockfile
+      - name: Regenerate event schemas (TS + Python)
+        run: |
+          pnpm -F @lockin/events gen:json-schema
+          bash packages/events/scripts/gen-python.sh
+          pnpm -F @lockin/events build
+      - run: pnpm -F @lockin/events test
+      - run: uv sync --all-packages --extra dev
+      - run: uv run --package lockin-events python -m pytest packages/events/python/tests
+
+  terraform-plan:
+    needs: detect
+    if: needs.detect.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - name: tf fmt
+        run: terraform -chdir=infra/terraform fmt -check -recursive
+      - name: tf validate (staging)
+        run: |
+          terraform -chdir=infra/terraform/envs/staging init -backend=false
+          terraform -chdir=infra/terraform/envs/staging validate
+      - name: tf validate (prod)
+        run: |
+          terraform -chdir=infra/terraform/envs/prod init -backend=false
+          terraform -chdir=infra/terraform/envs/prod validate
+
+  gate:
+    needs: [js, python-api, python-mcp, events-roundtrip, terraform-plan]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: All required checks passed (or correctly skipped)
+        run: |
+          for r in "${{ needs.js.result }}" "${{ needs.python-api.result }}" "${{ needs.python-mcp.result }}" "${{ needs.events-roundtrip.result }}" "${{ needs.terraform-plan.result }}"; do
+            if [ "$r" = "failure" ] || [ "$r" = "cancelled" ]; then
+              echo "Required job failed: $r"; exit 1
+            fi
+          done

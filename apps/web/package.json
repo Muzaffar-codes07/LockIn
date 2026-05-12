@@ -1,14 +1,21 @@
 {
-  "name": "web",
+  "name": "@lockin/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3000",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start --port 3000",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "clean": "rimraf .next .turbo"
   },
   "dependencies": {
+    "@lockin/events": "workspace:*",
+    "@lockin/shared-types": "workspace:*",
+    "@lockin/ui": "workspace:*",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -20,7 +27,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.0.5"
   }
 }
