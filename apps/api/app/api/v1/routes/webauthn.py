@@ -80,7 +80,7 @@ async def register_options(user: CurrentUserDep) -> dict[str, Any]:
     )
     _put_challenge(user.user_id, options.challenge)
 
-    return {
+    payload: dict[str, Any] = {
         "rp": {"id": options.rp.id, "name": options.rp.name},
         "user": {
             "id": _b64url(options.user.id),
@@ -93,11 +93,19 @@ async def register_options(user: CurrentUserDep) -> dict[str, Any]:
         ],
         "timeout": options.timeout,
         "attestation": options.attestation.value,
-        "authenticatorSelection": {
-            "residentKey": options.authenticator_selection.resident_key.value,
-            "userVerification": options.authenticator_selection.user_verification.value,
-        },
     }
+
+    sel = options.authenticator_selection
+    if sel is not None:
+        auth_sel: dict[str, str] = {}
+        if sel.resident_key is not None:
+            auth_sel["residentKey"] = sel.resident_key.value
+        if sel.user_verification is not None:
+            auth_sel["userVerification"] = sel.user_verification.value
+        if auth_sel:
+            payload["authenticatorSelection"] = auth_sel
+
+    return payload
 
 
 @router.post("/register/verify")

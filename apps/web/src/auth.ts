@@ -14,7 +14,6 @@ const secretEnv = process.env.AUTH_SECRET;
 if (!secretEnv) {
   // NextAuth v5 will throw a clearer error in production, but failing fast
   // here makes local-dev breakage obvious.
-  // eslint-disable-next-line no-console
   console.warn("AUTH_SECRET is not set — auth flows will fail.");
 }
 const secret = new TextEncoder().encode(secretEnv ?? "");
