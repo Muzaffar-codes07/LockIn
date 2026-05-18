@@ -1,0 +1,80 @@
+{
+  "annotations": { "list": [] },
+  "description": "Cloud SQL Postgres health. Metrics from Google Cloud Monitoring datasource.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Active connections",
+      "datasource": { "type": "stackdriver", "uid": "${DS_GCM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "metricKind": "GAUGE",
+          "metricName": "cloudsql.googleapis.com/database/postgresql/num_backends"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Query latency p95",
+      "datasource": { "type": "stackdriver", "uid": "${DS_GCM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "metricKind": "DELTA",
+          "metricName": "cloudsql.googleapis.com/database/postgresql/insights/aggregate/execution_time"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Deadlocks",
+      "datasource": { "type": "stackdriver", "uid": "${DS_GCM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "metricKind": "DELTA",
+          "metricName": "cloudsql.googleapis.com/database/postgresql/deadlock_count"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Replication lag (replicas)",
+      "datasource": { "type": "stackdriver", "uid": "${DS_GCM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "metricKind": "GAUGE",
+          "metricName": "cloudsql.googleapis.com/database/replication/replica_lag"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["lockin", "postgres"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "Google Cloud Monitoring", "value": "stackdriver" },
+        "label": "Datasource",
+        "name": "DS_GCM",
+        "options": [],
+        "query": "stackdriver",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "lockin — postgres health",
+  "uid": "lockin-postgres",
+  "version": 1
+}

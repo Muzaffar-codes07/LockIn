@@ -14,11 +14,10 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from app.core.config import settings
-from app.db.base import Base
 
 # Import every model module here so that Base.metadata sees all tables.
-# Add imports per slice as models land. None yet.
-# Example: from app.models import task, user  # noqa: F401
+from app.db import models  # noqa: F401
+from app.db.base import Base
 
 config = context.config
 

@@ -1,0 +1,68 @@
+{
+  "annotations": { "list": [] },
+  "description": "lockin-mcp tool-call surface. Re-export from Grafana UI after edits.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Tool-call rate (by tool name)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (mcp_tool) (rate(mcp_tool_call_total{service_name=\"lockin-mcp\"}[1m]))",
+          "legendFormat": "{{mcp_tool}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tool-call errors",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (mcp_tool) (rate(mcp_tool_call_total{service_name=\"lockin-mcp\", status=\"error\"}[1m]))",
+          "legendFormat": "{{mcp_tool}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tool-call latency p95",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(mcp_tool_call_duration_seconds_bucket{service_name=\"lockin-mcp\"}[5m])) by (mcp_tool, le))",
+          "legendFormat": "{{mcp_tool}} p95"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["lockin", "mcp"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "Prometheus", "value": "prometheus" },
+        "label": "Datasource",
+        "name": "DS_PROM",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "lockin-mcp — tool health",
+  "uid": "lockin-mcp",
+  "version": 1
+}
