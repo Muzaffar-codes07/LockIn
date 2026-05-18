@@ -1,0 +1,108 @@
+name: staging
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # OIDC to GCP (Workload Identity Federation)
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.11.x"
+      - run: pnpm install --frozen-lockfile
+      - name: Regenerate event schema artifacts (JSON + Python)
+        run: |
+          pnpm -F @lockin/events gen:json-schema
+          bash packages/events/scripts/gen-python.sh
+          pnpm -F @lockin/events build
+      - run: pnpm -F @lockin/web build
+        env:
+          NEXT_PUBLIC_GIT_SHA: ${{ github.sha }}
+          NEXT_PUBLIC_ENV: staging
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN_WEB }}
+          SENTRY_DSN_WEB: ${{ secrets.SENTRY_DSN_WEB }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
+          working-directory: apps/web
+          vercel-args: "--prod=false"
+
+  api:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev
+      - name: Build and push image
+        run: |
+          IMAGE="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lockin/api:${{ github.sha }}"
+          docker build -f apps/api/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: lockin-staging
+          location: us-central1
+      - name: Roll deployment
+        run: |
+          IMAGE="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lockin/api:${{ github.sha }}"
+          kubectl set image deploy/api api="$IMAGE" -n lockin
+          kubectl rollout status deploy/api -n lockin --timeout=300s
+
+  mcp:
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev
+      - name: Build and push image
+        run: |
+          IMAGE="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lockin/mcp:${{ github.sha }}"
+          docker build -f apps/mcp/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: lockin-staging
+          location: us-central1
+      - name: Roll deployment
+        run: |
+          IMAGE="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lockin/mcp:${{ github.sha }}"
+          kubectl set image deploy/mcp mcp="$IMAGE" -n lockin
+          kubectl rollout status deploy/mcp -n lockin --timeout=300s

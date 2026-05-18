@@ -1,0 +1,66 @@
+name: prod
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit SHA of the staging image to promote"
+        required: true
+
+concurrency:
+  group: prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    # The 'prod' GitHub Environment must be configured in repo Settings →
+    # Environments with a Required reviewers rule. The workflow file alone
+    # does not gate this — see docs/handoffs/week-1-2.md for the manual
+    # checklist.
+    environment: prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Retag staging images with the release tag
+        run: |
+          SHA="${{ github.event.inputs.sha || github.sha }}"
+          TAG="${GITHUB_REF_NAME}"
+          for svc in api mcp; do
+            SRC="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lockin/${svc}:${SHA}"
+            DST="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lockin/${svc}:${TAG}"
+            gcloud artifacts docker tags add "$SRC" "$DST"
+          done
+
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: lockin-prod
+          location: us-central1
+
+      - name: Roll prod deployments
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          for svc in api mcp; do
+            IMAGE="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/lockin/${svc}:${TAG}"
+            kubectl set image deploy/${svc} ${svc}="$IMAGE" -n lockin
+            kubectl rollout status deploy/${svc} -n lockin --timeout=600s
+          done
+
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
+          working-directory: apps/web
+          vercel-args: "--prod"
