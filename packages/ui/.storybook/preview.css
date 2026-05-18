@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@import "../src/tokens.css";
+
+/* Tell Tailwind v4 where to scan for class usage (components + stories). */
+@source "../src/**/*.{ts,tsx}";

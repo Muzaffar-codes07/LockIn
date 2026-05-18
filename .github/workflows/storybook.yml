@@ -1,0 +1,57 @@
+name: storybook
+on:
+  pull_request:
+    paths:
+      - "packages/ui/**"
+      - ".github/workflows/storybook.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: storybook-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F @lockin/events gen:json-schema
+      - run: pnpm -F @lockin/ui build-storybook
+
+      # Deploy step is gated on the Storybook Vercel project being
+      # provisioned. Until VERCEL_STORYBOOK_PROJECT_ID exists as a repo
+      # secret, the deploy + comment steps skip and the job still passes
+      # on the build alone.
+      - name: Deploy preview to Vercel
+        id: deploy
+        if: ${{ secrets.VERCEL_STORYBOOK_PROJECT_ID != '' }}
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_STORYBOOK_PROJECT_ID }}
+          working-directory: packages/ui/storybook-static
+
+      - name: Comment preview URL on the PR
+        if: ${{ steps.deploy.outputs.preview-url != '' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = "${{ steps.deploy.outputs.preview-url }}";
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `📚 Storybook preview: ${url}`,
+            });
