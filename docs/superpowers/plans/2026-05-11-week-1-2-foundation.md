@@ -1,5 +1,12 @@
 # Week 1–2 Foundation Slice — Implementation Plan
 
+> **✅ STATUS: COMPLETE (2026-05-18).** All 15 tasks shipped to `main` via PRs #1–#5.
+> The unchecked `- [ ]` boxes below are left as the historical plan record — do not
+> re-execute. Current state and remaining operational steps live in
+> [`docs/handoffs/week-1-2.md`](../../handoffs/week-1-2.md).
+> Mapping: Tasks 1,2,3,7(components),8 → PR #1 · Tasks 9,10,14 → PR #2 ·
+> Tasks 11,12,13 → PR #3 · Tasks 6,8(secrets CLI) → PR #4 · Task 4 → PR #5.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the eight Week 1–2 Foundation Handoff deliverables — monorepo wiring, CI/CD, GCP Terraform, observability, secret management, auth foundation, design system, and event schema v1 — so the Week 3 Auth+Task-Capture vertical slice can start clean on Day 1.
