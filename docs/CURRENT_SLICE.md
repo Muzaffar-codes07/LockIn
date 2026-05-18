@@ -1,10 +1,10 @@
 # Current Slice — Vertical Slice 0: Auth + Task Capture Spine
 
-> **⚠️ Foundation status (2026-05-11):** The Week 1–2 Foundation slice is **partially shipped**. Monorepo wiring, event schema v1 (9 types, TS↔Python round-trip green), `@lockin/ui` base components, GitHub Actions PR pipeline, and GCP Terraform modules are done. Auth (NextAuth + Google OAuth + passkeys), full observability (Sentry + OTel + Grafana), Storybook deploy, secrets-pull CLI, and the TimescaleDB hypertable migration are **not yet shipped**. Read [`docs/handoffs/week-1-2.md`](handoffs/week-1-2.md) before starting this slice — Slice 0 depends on auth being in place, so Tasks 9 + 10 of the foundation plan should land first.
+> **✅ Foundation status (2026-05-18):** The Week 1–2 Foundation slice is **complete** — all 8 deliverables merged to `main` across PRs #1–#5. Monorepo + Turborepo, event schema v1 (9 types, TS↔Python round-trip), `@lockin/ui` + Storybook, GitHub Actions (PR + staging + prod pipelines), GCP Terraform modules, observability (OTel + Sentry + Grafana), secret management, and the auth foundation (NextAuth v5 + Google OAuth + WebAuthn passkeys) are all on `main`. Remaining items are **operational, not code** — see [`docs/handoffs/week-1-2.md`](handoffs/week-1-2.md) for the ops checklist before this slice ships to a real environment.
 
-**Status:** Blocked on Foundation Tasks 9 + 10 (auth + passkeys)
+**Status:** Ready to start — foundation unblocked
 **Owner:** [assigned engineer]
-**Est. duration:** 3–5 days (after auth lands)
+**Est. duration:** 3–5 days
 
 ## The Goal
 

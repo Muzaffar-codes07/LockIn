@@ -103,4 +103,6 @@ The event schema is the most important artifact in the repo. Rules:
 
 ## Current Working Context
 
-See `docs/CURRENT_SLICE.md` for what we're actively building right now.
+The Week 1–2 Foundation slice is **complete** (all 8 deliverables on `main`, 2026-05-18). Active work is now **Vertical Slice 0 — Auth + Task Capture Spine**.
+
+See `docs/CURRENT_SLICE.md` for what we're actively building right now, and `docs/handoffs/week-1-2.md` for the foundation outcome + remaining operational steps.
