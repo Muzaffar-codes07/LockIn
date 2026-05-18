@@ -30,6 +30,7 @@ dependencies = [
     "python-jose[cryptography]>=3.3",
     "passlib[bcrypt]>=1.7",
     "authlib>=1.3",           # OAuth 2.1 client
+    "webauthn>=2.5",          # passkey registration + assertion
 
     # HTTP client (Google Calendar, LLM providers)
     "httpx>=0.28",
