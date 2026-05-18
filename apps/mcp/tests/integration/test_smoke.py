@@ -1,9 +1,13 @@
 """Smoke test: the MCP entrypoint imports cleanly.
 
-Loads the modules by file path because both apps/api and apps/mcp install
-themselves as the top-level 'app' Python package; sys.path resolution
-otherwise lands on the api copy. Renaming one is tracked as a separate
-cleanup.
+Catches regressions where a dep update or transport rename breaks
+``apps/mcp/app/main.py`` at import time.
+
+We load the module by file path rather than by name because both
+``apps/api`` and ``apps/mcp`` install themselves as the top-level
+``app`` Python package; sys.path resolution otherwise picks the api's
+``app.main`` and the assertion never reaches the MCP code. A proper
+fix (renaming one of the packages) is tracked as a separate cleanup.
 """
 
 import importlib.util
