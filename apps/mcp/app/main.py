@@ -2,10 +2,12 @@
 
 from app.core.config import settings
 from app.core.logging import configure_logging, get_logger
+from app.core.observability import configure_observability
 
 
 def main() -> None:
     configure_logging()
+    configure_observability()
     logger = get_logger("mcp.main")
     logger.info("mcp_starting", transport=settings.MCP_TRANSPORT)
 
