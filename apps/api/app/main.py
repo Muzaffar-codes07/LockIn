@@ -12,6 +12,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
+from app.core.observability import configure_observability
 
 
 @asynccontextmanager
@@ -26,8 +27,9 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app() -> FastAPI:
-    fast_app = FastAPI(title="LockIn API", version="0.0.1", lifespan=lifespan)
+    fast_app = FastAPI(title="LockIn API", version=settings.APP_VERSION, lifespan=lifespan)
     register_exception_handlers(fast_app)
+    configure_observability(fast_app)
     fast_app.include_router(api_router)
 
     # Liveness route at root, matching the Dockerfile HEALTHCHECK probe path.

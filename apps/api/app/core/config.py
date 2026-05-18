@@ -48,6 +48,17 @@ class Settings(BaseSettings):
     TEMPORAL_TLS_CERT: str | None = None
     TEMPORAL_TLS_KEY: str | None = None
 
+    # Observability. Leaving the OTLP endpoint / Sentry DSN empty disables
+    # those exporters — handy in tests and local dev where there's no
+    # collector running.
+    ENV: str = Field(default="local")
+    APP_VERSION: str = Field(default="0.0.1")
+    GIT_SHA: str = Field(default="dev")
+    GRAFANA_CLOUD_OTLP_ENDPOINT: str = Field(default="")
+    GRAFANA_CLOUD_OTLP_AUTH: str = Field(default="")
+    SENTRY_DSN_API: str = Field(default="")
+    SENTRY_TRACES_SAMPLE_RATE: float = Field(default=0.1)
+
 
 @lru_cache
 def get_settings() -> Settings:
