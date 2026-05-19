@@ -17,6 +17,9 @@ from lockin_events import STREAM_TASKS
 from app.core.config import settings
 
 
+# The default subject is a realistic Google OAuth `sub` (a numeric-ish
+# string, not a UUID). The /v1/tasks route maps it through `user_uuid()`,
+# so any stable string works as a subject here.
 def _bearer(subject: str = "google-sub-117234567890") -> str:
     token = jwt.encode(
         {
@@ -81,6 +84,8 @@ async def test_list_tasks_returns_user_tasks_newest_first(db_client: AsyncClient
     await db_client.post("/v1/tasks", headers=headers, json={"title": "first"})
     await db_client.post("/v1/tasks", headers=headers, json={"title": "second"})
 
+    # Each POST is a separate transaction, so the two rows get distinct
+    # `created_at` values; newest-first ordering is therefore deterministic.
     res = await db_client.get("/v1/tasks", headers=headers)
     assert res.status_code == 200
     titles = [t["title"] for t in res.json()]
