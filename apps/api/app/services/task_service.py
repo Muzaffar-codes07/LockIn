@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.task import Task
 from app.events.publisher import EventPublisher
+from app.schemas.task import TaskSource
 
 
 class TaskService:
@@ -28,7 +29,7 @@ class TaskService:
         *,
         user_id: UUID,
         title: str,
-        source: str,
+        source: TaskSource,
     ) -> Task:
         task = Task(id=uuid4(), user_id=user_id, title=title, source=source)
         self._session.add(task)
@@ -44,7 +45,7 @@ class TaskService:
                 "tenant_id": None,
                 "occurred_at": task.created_at.isoformat(),
                 "client_idempotency_key": None,
-                "source": "web",
+                "source": "web",  # Slice 0: web path only; MCP/API path sets this in a later slice.
                 "payload": {
                     "task_id": str(task.id),
                     "title": task.title,
