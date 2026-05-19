@@ -13,9 +13,9 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-import app.db.models  # noqa: F401 -- registers all models on Base.metadata
 from app.api.v1.deps import _db_session, _redis
 from app.core.config import settings
+from app.db import models as _models  # noqa: F401 -- registers all models on Base.metadata
 from app.db.base import Base
 from app.main import app
 
