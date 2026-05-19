@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 import fakeredis.aioredis
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -31,6 +32,8 @@ async def client() -> AsyncIterator[AsyncClient]:
 def _test_db_url() -> str:
     """Derive the test DB URL from DATABASE_URL by swapping the database name."""
     base, _, _name = settings.DATABASE_URL.rpartition("/")
+    if not base:
+        raise ValueError(f"Cannot derive test DB URL from DATABASE_URL={settings.DATABASE_URL!r}")
     return f"{base}/lockin_test"
 
 
@@ -63,14 +66,15 @@ async def db_client(
         async with maker() as session:
             yield session
 
-    async def _override_redis() -> AsyncIterator[fakeredis.aioredis.FakeRedis]:
+    async def _override_redis() -> AsyncIterator[Redis]:
         yield fake_redis
 
     app.dependency_overrides[_db_session] = _override_db
     app.dependency_overrides[_redis] = _override_redis
 
-    transport = ASGITransport(app=app, raise_app_exceptions=False)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        yield ac
-
-    app.dependency_overrides.clear()
+    try:
+        transport = ASGITransport(app=app, raise_app_exceptions=False)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            yield ac
+    finally:
+        app.dependency_overrides.clear()
