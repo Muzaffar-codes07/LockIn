@@ -17,3 +17,4 @@ def test_user_uuid_differs_per_subject() -> None:
 
 def test_user_uuid_returns_a_uuid() -> None:
     assert isinstance(user_uuid("117234567890"), UUID)
+    assert user_uuid("117234567890").version == 5
