@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { Button, Card, Stack, Text } from "@lockin/ui";
 import { CommandPalette } from "@/components/command-palette";
-import { useCreateTask, useTasks } from "@/hooks/use-tasks";
+import { useCreateTask, useDeleteTask, useTasks } from "@/hooks/use-tasks";
 
 export function DashboardClient() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { data: tasks = [], isPending } = useTasks();
   const createTask = useCreateTask();
+  const deleteTask = useDeleteTask();
 
   return (
     <main className="mx-auto w-full max-w-2xl p-6">
@@ -40,7 +41,17 @@ export function DashboardClient() {
           <Stack gap={2}>
             {tasks.map((task) => (
               <Card key={task.id}>
-                <Text>{task.title}</Text>
+                <div className="flex items-center justify-between gap-3">
+                  <Text>{task.title}</Text>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Delete ${task.title}`}
+                    onClick={() => deleteTask.mutate(task.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </Card>
             ))}
           </Stack>

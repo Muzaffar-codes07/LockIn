@@ -104,3 +104,19 @@ async def test_list_tasks_isolates_by_user(db_client: AsyncClient) -> None:
     )
     assert res.status_code == 200
     assert res.json() == []
+
+
+async def test_delete_task_is_idempotent(db_client: AsyncClient) -> None:
+    headers = {"Authorization": _bearer()}
+    created = await db_client.post("/v1/tasks", headers=headers, json={"title": "doomed"})
+    task_id = created.json()["id"]
+
+    first = await db_client.delete(f"/v1/tasks/{task_id}", headers=headers)
+    assert first.status_code == 204
+
+    # Deleting again is still 204 — desired end state already holds.
+    second = await db_client.delete(f"/v1/tasks/{task_id}", headers=headers)
+    assert second.status_code == 204
+
+    remaining = await db_client.get("/v1/tasks", headers=headers)
+    assert remaining.json() == []

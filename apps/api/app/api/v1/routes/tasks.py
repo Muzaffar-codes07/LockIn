@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, status
+from uuid import UUID
+
+from fastapi import APIRouter, Response, status
 
 from app.api.v1.deps import DbSession, EventPublisherDep
 from app.core.auth import CurrentUserDep
@@ -35,3 +37,15 @@ async def list_tasks(user: CurrentUserDep, session: DbSession) -> list[TaskRead]
     service = TaskService(session)
     tasks = await service.list_for_user(user_uuid(user.user_id))
     return [TaskRead.model_validate(task) for task in tasks]
+
+
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(
+    task_id: UUID,
+    user: CurrentUserDep,
+    session: DbSession,
+) -> Response:
+    service = TaskService(session)
+    # Idempotent: 204 whether or not the row existed.
+    await service.delete(user_id=user_uuid(user.user_id), task_id=task_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

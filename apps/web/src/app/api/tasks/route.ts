@@ -28,6 +28,9 @@ async function forward(
   } catch {
     return NextResponse.json({ error: "service_unavailable" }, { status: 503 });
   }
+  if (res.status === 204 || res.headers.get("content-length") === "0") {
+    return new NextResponse(null, { status: res.status });
+  }
   const contentType = res.headers.get("content-type") ?? "";
   const payload = contentType.includes("application/json")
     ? await res.json()
@@ -56,5 +59,20 @@ export async function POST(req: NextRequest) {
     method: "POST",
     headers: { Authorization: auth, "Content-Type": "application/json" },
     body,
+  });
+}
+
+export async function DELETE(req: NextRequest) {
+  const auth = bearer(req);
+  if (!auth) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "missing id" }, { status: 400 });
+  }
+  return forward(`${API_BASE_URL}/v1/tasks/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Authorization: auth },
   });
 }

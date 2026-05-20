@@ -36,3 +36,20 @@ export function useCreateTask() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
   });
 }
+
+async function deleteTask(id: string): Promise<void> {
+  const res = await fetch(`/api/tasks?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete task: ${res.status}`);
+  }
+}
+
+export function useDeleteTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTask,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
+  });
+}

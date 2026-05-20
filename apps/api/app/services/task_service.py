@@ -61,3 +61,19 @@ class TaskService:
             select(Task).where(Task.user_id == user_id).order_by(Task.created_at.desc())
         )
         return list(result.scalars().all())
+
+    async def delete(self, *, user_id: UUID, task_id: UUID) -> bool:
+        """Delete a task. Returns False if it does not exist for this user.
+
+        Idempotent: deleting an already-absent task is not an error — the
+        caller's desired end state (task gone) is satisfied either way.
+        """
+        result = await self._session.execute(
+            select(Task).where(Task.id == task_id, Task.user_id == user_id)
+        )
+        task = result.scalar_one_or_none()
+        if task is None:
+            return False
+        await self._session.delete(task)
+        await self._session.commit()
+        return True
