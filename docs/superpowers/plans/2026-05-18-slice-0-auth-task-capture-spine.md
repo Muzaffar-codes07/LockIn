@@ -4,9 +4,9 @@
 
 ---
 
-## Execution Status — paused 2026-05-19
+## Execution Status — COMPLETE 2026-05-19
 
-Executing via subagent-driven development on branch `feat/slice-0-auth-task-capture-spine`. **Tasks 1–10 are COMPLETE** (implemented, spec-reviewed, code-quality-reviewed, all review issues resolved). **Tasks 11–16 + final review remain.** Resume at Task 11.
+Executed via subagent-driven development on branch `feat/slice-0-auth-task-capture-spine`. **All 16 tasks + the stretch + the final review are done.** Test suites green: **27 backend pytest** + **4 web vitest** + clean mypy/typecheck/lint. Final review verdict: **Ready to merge**.
 
 | Task | Status | Final commit | Notes |
 |------|--------|--------------|-------|
@@ -20,13 +20,13 @@ Executing via subagent-driven development on branch `feat/slice-0-auth-task-capt
 | 8 — Integration tests for `/v1/tasks` | ✅ Done | `a6215ce` | 6 tests; full backend suite **24 passing** |
 | 9 — Shared TypeScript types | ✅ Done | `5a0b1ba` | |
 | 10 — React Query provider + layout | ✅ Done | `c1b72c5` | `@tanstack/react-query@^5.100.11` |
-| 11 — BFF route `/api/tasks` | ⬜ Not started | — | next |
-| 12 — Task data hooks | ⬜ Not started | — | |
-| 13 — Command palette + test | ⬜ Not started | — | |
-| 14 — Dashboard + landing page | ⬜ Not started | — | |
-| 15 — Decision record + handoff | ⬜ Not started | — | |
-| 16 — (stretch) task deletion | ⬜ Not started | — | |
-| Final code review | ⬜ Not started | — | |
+| 11 — BFF route `/api/tasks` | ✅ Done | `259c92a` | hardened in review: non-JSON & unreachable upstream return structured errors |
+| 12 — Task data hooks | ✅ Done | `8003a30` | error messages include HTTP status |
+| 13 — Command palette + test | ✅ Done | `a03cc2e` | + vitest stack added; `@lockin/ui` aliased to source; 4 tests |
+| 14 — Dashboard + landing page | ✅ Done | `fc72483` | `Stack gap={5}` adapted to `gap={6}` (plan typo — invalid value); error UI surfaced |
+| 15 — Decision record + handoff | ✅ Done | `557a797` | `docs/decisions/2026-05-18-data-layer.md`; `CURRENT_SLICE.md` advanced to Week 3–4 |
+| 16 — (stretch) task deletion | ✅ Done | `a3e73e4` | 3 new tests (idempotency, auth, isolation); `?id=` BFF debt flagged with TODO(week-3-4) |
+| Final code review | ✅ Approved | — | "Ready to merge" — only finding was this status-table update |
 
 **Environment notes (carry forward — important for Tasks 8/14 and CI):**
 - Docker Desktop is running; `docker-postgres-1` + `docker-redis-1` are up.
