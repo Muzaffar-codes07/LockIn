@@ -33,4 +33,18 @@ describe("CommandPalette", () => {
 
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it("clears the input when reopened", () => {
+    const { rerender } = render(
+      <CommandPalette open onOpenChange={() => {}} onSubmit={() => {}} />,
+    );
+    const input = screen.getByPlaceholderText("What needs doing?") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "draft" } });
+    expect(input.value).toBe("draft");
+
+    rerender(<CommandPalette open={false} onOpenChange={() => {}} onSubmit={() => {}} />);
+    rerender(<CommandPalette open onOpenChange={() => {}} onSubmit={() => {}} />);
+    const reopened = screen.getByPlaceholderText("What needs doing?") as HTMLInputElement;
+    expect(reopened.value).toBe("");
+  });
 });
