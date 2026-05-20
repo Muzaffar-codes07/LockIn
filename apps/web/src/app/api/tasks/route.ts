@@ -18,16 +18,32 @@ function bearer(req: NextRequest): string | null {
   return token ? `Bearer ${token}` : null;
 }
 
+async function forward(
+  url: string,
+  init: RequestInit,
+): Promise<NextResponse> {
+  let res: Response;
+  try {
+    res = await fetch(url, init);
+  } catch {
+    return NextResponse.json({ error: "service_unavailable" }, { status: 503 });
+  }
+  const contentType = res.headers.get("content-type") ?? "";
+  const payload = contentType.includes("application/json")
+    ? await res.json()
+    : { error: "upstream_error" };
+  return NextResponse.json(payload, { status: res.status });
+}
+
 export async function GET(req: NextRequest) {
   const auth = bearer(req);
   if (!auth) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const res = await fetch(`${API_BASE_URL}/v1/tasks`, {
+  return forward(`${API_BASE_URL}/v1/tasks`, {
     headers: { Authorization: auth },
     cache: "no-store",
   });
-  return NextResponse.json(await res.json(), { status: res.status });
 }
 
 export async function POST(req: NextRequest) {
@@ -36,10 +52,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const body = await req.text();
-  const res = await fetch(`${API_BASE_URL}/v1/tasks`, {
+  return forward(`${API_BASE_URL}/v1/tasks`, {
     method: "POST",
     headers: { Authorization: auth, "Content-Type": "application/json" },
     body,
   });
-  return NextResponse.json(await res.json(), { status: res.status });
 }
