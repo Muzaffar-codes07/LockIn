@@ -8,7 +8,7 @@ const TASKS_KEY = ["tasks"] as const;
 async function fetchTasks(): Promise<TaskResponse[]> {
   const res = await fetch("/api/tasks", { cache: "no-store" });
   if (!res.ok) {
-    throw new Error("Failed to load tasks");
+    throw new Error(`Failed to load tasks: ${res.status}`);
   }
   return res.json();
 }
@@ -20,7 +20,7 @@ async function createTask(input: TaskCreateRequest): Promise<TaskResponse> {
     body: JSON.stringify(input),
   });
   if (!res.ok) {
-    throw new Error("Failed to create task");
+    throw new Error(`Failed to create task: ${res.status}`);
   }
   return res.json();
 }
