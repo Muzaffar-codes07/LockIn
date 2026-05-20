@@ -21,6 +21,12 @@ export function DashboardClient() {
           Add a task — ⌘K
         </Button>
 
+        {createTask.isError ? (
+          <Text tone="danger" role="alert">
+            Couldn&apos;t add task: {(createTask.error as Error).message}
+          </Text>
+        ) : null}
+
         {isPending ? (
           <Text tone="muted">Loading…</Text>
         ) : tasks.length === 0 ? (

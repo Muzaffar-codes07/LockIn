@@ -30,10 +30,13 @@ export function CommandPalette({ open, onOpenChange, onSubmit }: CommandPaletteP
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
-      return () => {
-        setValue("");
-      };
     }
+    // Reset the input on close. We put this in the cleanup (not an `else`
+    // branch) so it runs only when `open` flips true → false, satisfying
+    // react-hooks/set-state-in-effect.
+    return () => {
+      setValue("");
+    };
   }, [open]);
 
   if (!open) {
