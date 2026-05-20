@@ -28,8 +28,8 @@ async function forward(
   } catch {
     return NextResponse.json({ error: "service_unavailable" }, { status: 503 });
   }
-  if (res.status === 204 || res.headers.get("content-length") === "0") {
-    return new NextResponse(null, { status: res.status });
+  if (res.status === 204) {
+    return new NextResponse(null, { status: 204 });
   }
   const contentType = res.headers.get("content-type") ?? "";
   const payload = contentType.includes("application/json")
@@ -62,6 +62,8 @@ export async function POST(req: NextRequest) {
   });
 }
 
+// TODO(week-3-4): when PATCH lands, refactor this BFF to a `[id]/route.ts`
+// dynamic segment so the proxy URL matches the backend (DELETE /v1/tasks/{id}).
 export async function DELETE(req: NextRequest) {
   const auth = bearer(req);
   if (!auth) {

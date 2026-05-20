@@ -120,3 +120,30 @@ async def test_delete_task_is_idempotent(db_client: AsyncClient) -> None:
 
     remaining = await db_client.get("/v1/tasks", headers=headers)
     assert remaining.json() == []
+
+
+async def test_delete_task_requires_auth(db_client: AsyncClient) -> None:
+    res = await db_client.delete("/v1/tasks/00000000-0000-0000-0000-000000000000")
+    assert res.status_code == 401
+
+
+async def test_delete_task_isolates_by_user(db_client: AsyncClient) -> None:
+    # User A creates a task.
+    created = await db_client.post(
+        "/v1/tasks",
+        headers={"Authorization": _bearer("user-a")},
+        json={"title": "owned by A"},
+    )
+    task_id = created.json()["id"]
+
+    # User B tries to delete it — gets 204 (idempotent) but the row survives.
+    res = await db_client.delete(
+        f"/v1/tasks/{task_id}",
+        headers={"Authorization": _bearer("user-b")},
+    )
+    assert res.status_code == 204
+
+    # The task is still there for user A.
+    remaining = await db_client.get("/v1/tasks", headers={"Authorization": _bearer("user-a")})
+    titles = [t["title"] for t in remaining.json()]
+    assert titles == ["owned by A"]

@@ -28,6 +28,12 @@ export function DashboardClient() {
           </Text>
         ) : null}
 
+        {deleteTask.isError ? (
+          <Text tone="danger" role="alert">
+            Couldn&apos;t delete task: {(deleteTask.error as Error).message}
+          </Text>
+        ) : null}
+
         {isPending ? (
           <Text tone="muted">Loading…</Text>
         ) : tasks.length === 0 ? (
