@@ -2,6 +2,44 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+---
+
+## Execution Status — paused 2026-05-19
+
+Executing via subagent-driven development on branch `feat/slice-0-auth-task-capture-spine`. **Tasks 1–10 are COMPLETE** (implemented, spec-reviewed, code-quality-reviewed, all review issues resolved). **Tasks 11–16 + final review remain.** Resume at Task 11.
+
+| Task | Status | Final commit | Notes |
+|------|--------|--------------|-------|
+| 1 — `user_uuid` helper | ✅ Done | `563a292` | + v5-version assertion added in review |
+| 2 — `Task` model + migration `0003` | ✅ Done | `5289f7a` | migration code verified; live `alembic upgrade` deferred (see env notes) |
+| 3 — `TaskCreate`/`TaskRead` schemas | ✅ Done | `04ecc83` | |
+| 4 — Redis + `EventPublisher` deps | ✅ Done | `d547d13` | |
+| 5 — `TaskService` dual-write | ✅ Done | `3096939` | `create()` `source` param tightened to `TaskSource` in review |
+| 6 — `/v1/tasks` routes | ✅ Done | `462afb8` | |
+| 7 — Backend test infrastructure | ✅ Done | `26ad735` | 3 review fixes: root `uv.lock` updated, `try/finally` override cleanup, `app`-name-shadow fix |
+| 8 — Integration tests for `/v1/tasks` | ✅ Done | `a6215ce` | 6 tests; full backend suite **24 passing** |
+| 9 — Shared TypeScript types | ✅ Done | `5a0b1ba` | |
+| 10 — React Query provider + layout | ✅ Done | `c1b72c5` | `@tanstack/react-query@^5.100.11` |
+| 11 — BFF route `/api/tasks` | ⬜ Not started | — | next |
+| 12 — Task data hooks | ⬜ Not started | — | |
+| 13 — Command palette + test | ⬜ Not started | — | |
+| 14 — Dashboard + landing page | ⬜ Not started | — | |
+| 15 — Decision record + handoff | ⬜ Not started | — | |
+| 16 — (stretch) task deletion | ⬜ Not started | — | |
+| Final code review | ⬜ Not started | — | |
+
+**Environment notes (carry forward — important for Tasks 8/14 and CI):**
+- Docker Desktop is running; `docker-postgres-1` + `docker-redis-1` are up.
+- **A native PostgreSQL 18 on Windows binds `localhost:5432` and shadows the Docker container's published port.** During Task 8 the `lockin` role and the `lockin` + `lockin_test` databases were bootstrapped on the *native* instance (its `pg_hba.conf` was temporarily set to `trust`, then restored to `scram-sha-256` — not committed). All backend tests therefore run against the native Postgres. Task 14's manual smoke test will also hit the native instance; the dev `lockin` DB there still needs `alembic upgrade head` applied before the smoke test.
+- The workspace uses a **single root `uv.lock`**; the stale `apps/api/uv.lock` is ignored by uv in workspace mode.
+
+**Carried-forward review observations (non-blocking, not yet actioned):**
+- Migration `0003` (and `0002`) have no DB-side `gen_random_uuid()` default on `id` — ORM supplies `uuid4`; raw-SQL inserts would need a default. Hardening pass, post-Slice-0.
+- `TaskService` dual write has no transactional outbox — if the Redis publish fails post-commit the event is lost (documented in the file; outbox is a later slice).
+- `created_at`-based ordering has no monotonic tiebreaker — theoretical flake risk if two POSTs share a timestamp (very low; documented in `test_tasks.py`).
+
+---
+
 **Goal:** Build the smallest end-to-end loop that proves the architecture — a signed-in user opens a Cmd+K palette, types a task title, presses Enter, and sees it persist in a list — with the task written to Postgres and a `task.created` event emitted to Redis Streams.
 
 **Architecture:** Next.js 16 web app authenticates with Google via the existing NextAuth v5 setup. A thin Next.js Route Handler (`/api/tasks`) acts as a BFF proxy: it reads the HS256 session-token cookie and forwards it as a `Bearer` token to the FastAPI backend. FastAPI validates the JWT, a `TaskService` dual-writes to Postgres and publishes a `task.created` event to the `events:tasks` Redis Stream. The frontend uses React Query (TanStack Query) for fetching and optimistic-ready mutations.
