@@ -30,8 +30,9 @@ export function CommandPalette({ open, onOpenChange, onSubmit }: CommandPaletteP
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
-    } else {
-      setValue("");
+      return () => {
+        setValue("");
+      };
     }
   }, [open]);
 
