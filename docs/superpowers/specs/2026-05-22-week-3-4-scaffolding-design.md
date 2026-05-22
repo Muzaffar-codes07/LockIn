@@ -83,6 +83,7 @@ Each migration = one commit. Standard row shape codified in a `BaseEntity` SQLAl
 | `0011` | `oauth_tokens` (escalated table) | `user_id`, `provider VARCHAR(32)`, `refresh_token_encrypted BYTEA`, `access_token_encrypted BYTEA`, **`key_version SMALLINT NOT NULL DEFAULT 1`** (indexed), `access_token_expires_at TIMESTAMPTZ`, `granted_scopes TEXT[]`, `disconnected_at TIMESTAMPTZ NULL`, `refresh_failure_count INT NOT NULL DEFAULT 0`, `sync_token TEXT NULL`, `calendar_initial_sync_completed_at TIMESTAMPTZ NULL`. Unique `(user_id, provider)`. v4 primary key. Encryption: AES-GCM, keys from env (see §5). |
 | `0012` | `idempotency_keys` | `(user_id, client_idempotency_key) UNIQUE`, `request_hash BYTEA`, `response_json JSONB`, `status_code SMALLINT`, `created_at`. **Born with `INDEX (created_at)`** for the batched cleanup pattern (see §4). v4 primary key. |
 | `0013` | `behavior_events` hypertable + continuous aggregates | Create regular table → `create_hypertable('behavior_events', 'occurred_at', chunk_time_interval => INTERVAL '1 month')`. Compression: `ALTER TABLE … SET (timescaledb.compress, timescaledb.compress_segmentby = 'user_id, event_type'); SELECT add_compression_policy('behavior_events', INTERVAL '7 days')`. **Retention policy commented in DDL, not registered** (explicit). Two continuous aggs: `daily_task_completions` (count of `task.completed` events), `daily_mood_avg` (avg of `mood.logged` score). Refresh: `add_continuous_aggregate_policy(start_offset INTERVAL '7 days', end_offset INTERVAL '1 hour', schedule_interval INTERVAL '15 minutes')`. v7 primary key on regular events; hypertable partitioning by `occurred_at`. |
+| `0014` | **Claim `apscheduler_jobs`** under Alembic management | APScheduler's `SQLAlchemyJobStore` creates `apscheduler_jobs` at runtime on first scheduler start; without explicit migration, the table sits outside the `alembic history` chain and confuses future readers. Migration body: `op.execute("CREATE TABLE IF NOT EXISTS apscheduler_jobs (id VARCHAR(191) PRIMARY KEY, next_run_time DOUBLE PRECISION, job_state BYTEA NOT NULL)")` + `CREATE INDEX IF NOT EXISTS ix_apscheduler_jobs_next_run_time ON apscheduler_jobs (next_run_time)`. Schema matches APScheduler source ([`apscheduler/jobstores/sqlalchemy.py`](https://github.com/agronholm/apscheduler/blob/3.x/apscheduler/jobstores/sqlalchemy.py)) — re-verify on any APScheduler bump. Downgrade drops the table. **Idempotent semantics (`IF NOT EXISTS`)** so the migration is safe whether APScheduler beat Alembic to the punch or not. |
 
 ### UUID strategy specifics
 
@@ -192,7 +193,7 @@ Defensible: local-dev-only, no consumers exist yet, no real data loss.
 | 3 | `cors.py` | Starlette `CORSMiddleware`. Origins from `WEB_ORIGINS` env (CSV). Local: `*`. Staging/prod: explicit list. |
 | 4 | `rate_limit.py` | **Fixed-window counter** (not token bucket — accept 2×-burst-at-boundary tradeoff; P1 doesn't need burst smoothing). Lua at `apps/api/app/middleware/rate_limit.lua`: `local c = redis.call('INCR', KEYS[1]); if c == 1 then redis.call('EXPIRE', KEYS[1], 60) end; return c`. Loaded via `SCRIPT LOAD` on startup, `EVALSHA` at request, fallback to `EVAL` on `NOSCRIPT`. Per-user key `rl:user:{uuid}` (100/min), per-IP key `rl:ip:{addr}` (1000/min). On `redis.RedisError` or Lua returning `None`: log warning + Sentry breadcrumb + `return await call_next(request)` — **fail open is the only branch tested first.** |
 | 5 | `jwt.py` | **Bearer-only, strict scheme parsing.** Reads `Authorization: Bearer <HS256>`. Anything else (`Token …`, `JWT …`, `bearer …` lowercase, missing scheme, missing header) → 401 with structured `error.code`. Codes: `auth_missing, auth_invalid_scheme, auth_invalid_signature, auth_expired, auth_malformed`. Lifted from Slice 0's `get_current_user` dependency. Anonymous paths allow-listed: `/health`, `/v1/auth/*`, `/docs`, `/openapi.json`. Attaches `request.state.user_id` (the deterministic `user_uuid()` v5 mapping from Slice 0). |
-| 6 | `idempotency.py` | **Mutations only** (POST/PUT/PATCH/DELETE). No `Idempotency-Key` header → pass through, no caching. Canonical request hash: `sha256(method.upper() + path + querystring_sorted_by_key + body_normalized)` where JSON bodies are parsed and re-serialized with sorted keys (defeats false-positive 422s from key-order differences); non-JSON hashed as raw bytes. Hit + hash matches → replay cached `response_json` + `status_code`. Hit + hash differs → 422 `idempotency_key_reused`. Miss → capture response, write row **inside the same transaction as the route's writes** (no separate commit). **Cache only 2xx and 4xx** — 5xx never persisted (no row written); next retry re-executes the route. Module docstring documents this rule. |
+| 6 | `idempotency.py` | **Mutations only** (POST/PUT/PATCH/DELETE). No `Idempotency-Key` header → pass through, no caching. Canonical request hash: `sha256(method.upper() + path + querystring_sorted_by_key + body_normalized)` where JSON bodies are parsed and re-serialized with sorted keys (defeats false-positive 422s from key-order differences); non-JSON hashed as raw bytes. Hit + hash matches → replay cached `response_json` + `status_code`. Hit + hash differs → 422 `idempotency_key_reused`. Miss → capture response, write row **inside the same transaction as the route's writes** (no separate commit). **Cache only 2xx and 4xx** — 5xx never persisted (no row written); next retry re-executes the route. Module docstring documents this rule. **Session sharing wiring:** an upstream FastAPI dependency (`get_session_into_request_state`) attaches the async session to `request.state.db` before any route or middleware runs; both the idempotency middleware and the route's `Depends(get_session)` resolve to the same session object so the idempotency row joins the route's transaction without a second `commit()`. The dependency is wired in `apps/api/app/api/v1/deps.py` and applied via `app.dependency_overrides` so it's enforced globally, not per-route. |
 
 ### Stub endpoints (Week 5 needs these)
 
@@ -257,7 +258,7 @@ Existing users lack the calendar scope in their stored refresh token. Site-wide 
 
 ### Polling sync architecture
 
-`AsyncIOScheduler` + `SQLAlchemyJobStore` (Postgres-backed — survives restarts; enables a second worker process in Week 5+ without rearchitecting).
+`AsyncIOScheduler` + `SQLAlchemyJobStore` (Postgres-backed — survives restarts; enables a second worker process in Week 5+ without rearchitecting). The jobstore's `apscheduler_jobs` table is brought under Alembic via migration `0014` (see §2) — no mixed-provenance schema.
 
 One job per connected user: `sync_calendar({user_id})`, scheduled every 5min with `next_run_time = now() + (hash(user_id) % 300)s` for jitter.
 
@@ -265,10 +266,10 @@ Each job:
 
 1. **Acquire fenced lock.** `SET lock:calendar:{user_id} <uuid7-token> EX 300 NX` — bail if held. Token stored on stack for release.
 2. Load `oauth_tokens` row. Refresh access token if `expires_at - now() < 5min`.
-3. `GET https://www.googleapis.com/calendar/v3/calendars/primary/events?syncToken=<stored>&maxResults=250` (paginated).
+3. **Inside `asyncio.timeout(280)`** (10s under the lock TTL — guarantees the release Lua runs before TTL expires, eliminating the lock-race window even on hangs): `GET https://www.googleapis.com/calendar/v3/calendars/primary/events?syncToken=<stored>&maxResults=250` (paginated).
 4. Upsert each event into `calendar_events` keyed by `(user_id, google_event_id) UNIQUE`. Emit `calendar.event_synced` via `publish_operational` to `events:calendar` for new/changed rows.
 5. Persist new `syncToken` on `oauth_tokens`.
-6. **Release lock via Lua** (`apps/api/app/calendar/lock_release.lua`): `if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end`. Same `SCRIPT LOAD` → `EVALSHA` → fallback `EVAL` discipline as §4. **Prevents the lock-expired-then-deleted-by-late-job race.**
+6. **Release lock via Lua** (`apps/api/app/calendar/lock_release.lua`): `if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end`. Same `SCRIPT LOAD` → `EVALSHA` → fallback `EVAL` discipline as §4. **Prevents the lock-expired-then-deleted-by-late-job race.** Combined with the timeout in step 3, the worst-case behavior is `asyncio.TimeoutError` → release runs → next tick retries — never two concurrent jobs.
 
 ### Failure branches
 
@@ -301,7 +302,7 @@ After OAuth consent, BFF redirects to `/settings/integrations?just_connected=cal
 started → fetching_events → events_received(N) → completed | failed(reason)
 ```
 
-Frontend opens the SSE on `?just_connected=calendar` redirect, closes on terminal event. No polling, no wasted requests, clear failure path.
+**Frontend cannot use the native browser `EventSource` API** — `EventSource` does not carry custom headers, and the BFF→api contract is Bearer-only. The frontend uses [`@microsoft/fetch-event-source`](https://github.com/Azure/fetch-event-source) (added to `apps/web/package.json`), which is `fetch`-based and accepts arbitrary headers including `Authorization: Bearer <token>`. Open on the `?just_connected=calendar` redirect; close on terminal event. No polling, no wasted requests, clear failure path.
 
 ### Disconnection / reconnection UX
 
@@ -356,9 +357,10 @@ apps/web/src/
 
 `apps/web/src/lib/auth/redirect.ts` exports `sanitize_next_param(raw: string | null): string`:
 
+- **Rule 0 (pre-check): reject any value containing `\`** before further validation. Browser URL normalization converts `\` → `/` in some contexts (a payload like `/\evil.com` becomes `//evil.com` after parsing), bypassing the protocol-relative check below. Standard OWASP open-redirect defense.
 - Must start with `/` (single slash — `//` is protocol-relative, rejected).
 - Must not start with `/api/`.
-- URL-decoded form must also pass rules 1 and 2 (defeats double-encoding bypass).
+- URL-decoded form must also pass rules 0–2 (defeats double-encoding bypass).
 - Any rule violation → drop param, return safe default `/today`.
 
 Used in both `middleware.ts` (reading `?next=…`) and the login page (writing the `next` on the redirect URL). **Open-redirect class of vulnerabilities killed at the lib level.**
@@ -447,7 +449,7 @@ Per-category gates, not aggregate. Accessibility gets the highest threshold (sil
 
 - `test_middleware_redirects_unauthed` — no session + `/today` → 302 `/login?next=/today`.
 - `test_middleware_redirects_authed_from_login` — session + `/login?next=/settings` → 302 `/settings`.
-- `test_middleware_rejects_malicious_next` — `//evil.com`, `https://evil.com`, `/api/auth/csrf`, `%2F%2Fevil.com`, `%252F%252Fevil.com` all sanitized to `/today`.
+- `test_middleware_rejects_malicious_next` — `//evil.com`, `https://evil.com`, `/api/auth/csrf`, `%2F%2Fevil.com`, `%252F%252Fevil.com`, `/\evil.com`, `%5Cevil.com` all sanitized to `/today`.
 - `test_theme_persists_across_refresh` — toggle → reload → class still applied; no flash (assert `<html>` class on first paint, not post-hydrate).
 - `test_today_empty_state_opens_palette` — clicking action triggers palette open.
 - `test_palette_focus_returns_to_trigger` — Escape → focus on trigger button.
@@ -479,8 +481,8 @@ Single branch `feat/week-3-4-scaffolding`. One PR. Six logical commits (one per 
 | 6 (AM) | **§6 scaffolding split** (conditional, 3hr max): scaffold route groups in `(auth)/` + `(authed)/`, drop `EmptyState`/`Banner`/`Skeleton`/`FAB` into `@lockin/ui` with Storybook stories, write `sanitize_next_param` + tests. Skip if Day 4–5 review shows ahead | Pulls ~30% of §6 forward into low-pressure time; leaves Day 10 for integration work |
 | 6 (PM)–7 | §4 middleware stack (6 modules). ErrorEnvelope outermost (with the forced-JWT-raise test). Strict Bearer JWT with structured `error.code`. Rate-limit Lua via `SCRIPT LOAD`+`EVALSHA`. Idempotency 2xx/4xx-only + canonical hash | Order test passes; rate-limit fails open on both error types; idempotency replays + 422s correctly |
 | 7 | §4 stub endpoints `/v1/mood`, `/v1/energy`. Idempotency TTL cleanup (batched). OpenAPI dump script + CI `git diff --exit-code` gate | Three load-bearing tests green; CI catches missing dump regeneration |
-| 8 | §5 calendar scope extension, `oauth_tokens` AES-GCM encryption (V1 key only), APScheduler polling with fenced lock, 410+401 branches with orphan pruning, token refresh with 60-bucket partition + `Semaphore(20)` | Mocked-Google integration tests green; lock fencing test passes |
-| 9 | §5 SSE for initial-sync status. Re-consent banner. `/settings/integrations` connect flow. 5 calendar tests | All §5 tests green |
+| 8 | §5 calendar scope extension, `oauth_tokens` AES-GCM encryption (V1 key only), migration `0014` (Alembic-claim `apscheduler_jobs`), APScheduler polling with fenced lock + `asyncio.timeout(280)`, 410+401 branches with orphan pruning, token refresh with 60-bucket partition + `Semaphore(20)` | Mocked-Google integration tests green; lock fencing test passes; `alembic history` shows 0014 in the chain |
+| 9 | §5 SSE for initial-sync status (backend `EventSourceResponse` + frontend `@microsoft/fetch-event-source` consumer for Bearer compatibility). Re-consent banner. `/settings/integrations` connect flow. 5 calendar tests | All §5 tests green |
 | 10 | §6 integration work: theme cookie + CH-hint + Secure flag, FAB wiring, palette focus-return, route guard with `sanitize_next_param`, Lighthouse CI tuning, vitest-axe. **Execute end-to-end smoke test (`docs/handoffs/week-3-4-smoke-test.md`).** Final DoD walkthrough | All six DoD groups green; spec doc + handoff written; smoke green |
 
 ### Dependency graph
