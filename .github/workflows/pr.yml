@@ -88,6 +88,37 @@ jobs:
       - uses: astral-sh/setup-uv@v3
         with:
           version: "0.11.x"
+
+      # Slice 0 integration tests (`db_client` fixture in
+      # apps/api/tests/conftest.py) need a real Postgres. We start it as a
+      # docker container with a per-run random password so no literal
+      # credential lives in source (keeps GitGuardian quiet). The fixture
+      # drops/recreates tables via Base.metadata per test, so no Alembic
+      # step is needed here — only the `lockin_test` DB.
+      - name: Start ephemeral Postgres with random password
+        run: |
+          PG_PWD=$(openssl rand -hex 24)
+          AUTH=$(openssl rand -hex 32)
+          echo "::add-mask::$PG_PWD"
+          echo "::add-mask::$AUTH"
+          docker run -d --name pg \
+            -e POSTGRES_USER=lockin \
+            -e POSTGRES_PASSWORD="$PG_PWD" \
+            -e POSTGRES_DB=lockin \
+            -p 5432:5432 \
+            postgres:16-alpine
+          for _ in $(seq 1 30); do
+            docker exec pg pg_isready -U lockin -d lockin >/dev/null 2>&1 && break
+            sleep 1
+          done
+          docker exec -e PGPASSWORD="$PG_PWD" pg \
+            psql -U lockin -d postgres -c "CREATE DATABASE lockin_test;"
+          {
+            echo "PG_PWD=$PG_PWD"
+            echo "DATABASE_URL=postgresql+asyncpg://lockin:$PG_PWD@localhost:5432/lockin"
+            echo "AUTH_SECRET=$AUTH"
+          } >> "$GITHUB_ENV"
+
       - run: pnpm install --frozen-lockfile
       - name: Regenerate Python event models
         run: |
