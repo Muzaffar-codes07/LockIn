@@ -1,0 +1,51 @@
+# Node / pnpm
+node_modules/
+.next/
+.turbo/
+.parcel-cache/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Python envs and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.uv-cache/
+
+# Test / coverage
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+
+# Logs and env
+*.log
+.env
+.env.local
+.env.*.local
+
+# Secrets baselines (large generated JSON)
+.secrets.baseline
+.secrets.baseline.bak
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Graphify output
+graphify-out/
+
+# Storybook static build artifacts — Parcel-bundled vendor JS with mangled
+# symbol names; pure noise in the knowledge graph.
+packages/ui/storybook-static/
+**/storybook-static/

@@ -1,0 +1,55 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { TaskCreateRequest, TaskResponse } from "@lockin/shared-types";
+
+const TASKS_KEY = ["tasks"] as const;
+
+async function fetchTasks(): Promise<TaskResponse[]> {
+  const res = await fetch("/api/tasks", { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Failed to load tasks: ${res.status}`);
+  }
+  return res.json();
+}
+
+async function createTask(input: TaskCreateRequest): Promise<TaskResponse> {
+  const res = await fetch("/api/tasks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to create task: ${res.status}`);
+  }
+  return res.json();
+}
+
+export function useTasks() {
+  return useQuery({ queryKey: TASKS_KEY, queryFn: fetchTasks });
+}
+
+export function useCreateTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createTask,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
+  });
+}
+
+async function deleteTask(id: string): Promise<void> {
+  const res = await fetch(`/api/tasks?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete task: ${res.status}`);
+  }
+}
+
+export function useDeleteTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTask,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
+  });
+}

@@ -1,1 +1,1 @@
-"""Pydantic v2 DTOs (request/response). Grouped by aggregate, added per slice."""
+"""API request/response Pydantic models. Not ORM models, not event models."""
