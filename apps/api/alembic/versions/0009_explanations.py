@@ -21,6 +21,11 @@ def upgrade() -> None:
         ),
         sa.Column("user_id", UUID(as_uuid=True), nullable=False),
         sa.Column("tenant_id", UUID(as_uuid=True), nullable=True),
+        sa.Column("subject_type", sa.String(32), nullable=False),
+        sa.Column("subject_id", UUID(as_uuid=True), nullable=False),
+        sa.Column("reasoning", JSONB, nullable=False),
+        sa.Column("model_id", sa.String(64), nullable=False),
+        sa.Column("latency_ms", sa.Integer(), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
         ),
@@ -28,11 +33,6 @@ def upgrade() -> None:
             "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
         ),
         sa.Column("version", sa.Integer(), server_default=sa.text("1"), nullable=False),
-        sa.Column("subject_type", sa.String(32), nullable=False),
-        sa.Column("subject_id", UUID(as_uuid=True), nullable=False),
-        sa.Column("reasoning", JSONB, nullable=False),
-        sa.Column("model_id", sa.String(64), nullable=False),
-        sa.Column("latency_ms", sa.Integer(), nullable=False),
     )
     op.create_index("ix_explanations_tenant_id", "explanations", ["tenant_id"])
     op.create_index(

@@ -21,13 +21,6 @@ def upgrade() -> None:
         ),
         sa.Column("user_id", UUID(as_uuid=True), nullable=False),
         sa.Column("tenant_id", UUID(as_uuid=True), nullable=True),
-        sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
-        ),
-        sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
-        ),
-        sa.Column("version", sa.Integer(), server_default=sa.text("1"), nullable=False),
         sa.Column("google_event_id", sa.String(1024), nullable=False),
         sa.Column("summary", sa.Text(), nullable=True),
         sa.Column("starts_at", sa.DateTime(timezone=True), nullable=False),
@@ -39,6 +32,13 @@ def upgrade() -> None:
             nullable=False,
             server_default="primary",
         ),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column("version", sa.Integer(), server_default=sa.text("1"), nullable=False),
         sa.UniqueConstraint("user_id", "google_event_id", name="uq_calendar_events_user_google_id"),
     )
     op.create_index("ix_calendar_events_tenant_id", "calendar_events", ["tenant_id"])
