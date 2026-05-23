@@ -25,6 +25,7 @@ class Task(Base):
     id: Mapped[UUID] = mapped_column(
         PgUUID(as_uuid=True),
         primary_key=True,
+        nullable=False,
         default=_uuid7,
         server_default=sa.text("gen_random_uuid()"),
     )
