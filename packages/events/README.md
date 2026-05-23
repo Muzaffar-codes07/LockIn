@@ -41,3 +41,12 @@ See [`src/streams.ts`](src/streams.ts) / [`python/lockin_events/streams.py`](pyt
 ## Fixtures
 
 `fixtures/<event_type>.json` holds one minimal-but-valid example per event type. The TS and Python tests round-trip every fixture through their respective parsers to keep the two language sides in lockstep.
+
+## Behavioral vs operational events
+
+Events are split at the publisher API surface (`publish_behavioral` vs `publish_operational`). See `docs/decisions/2026-05-22-event-publisher-typing.md`.
+
+| Category | Event types |
+|---|---|
+| Behavioral (feeds `behavior_events` hypertable) | `task.created`, `task.completed`, `task.scheduled`, `task.accepted`, `task.rejected`, `task.modified`, `mood.logged`, `energy.logged` |
+| Operational (stream-only) | `calendar.connected`, `calendar.event_synced`, `calendar.disconnected`, `agent.action_proposed`, `agent.action_committed`, `system.*` |
