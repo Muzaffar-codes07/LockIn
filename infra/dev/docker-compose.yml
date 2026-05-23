@@ -25,6 +25,9 @@ services:
   redis:
     image: redis:7.4-alpine
     container_name: lockin-redis
+    # Intentionally no named volume: in dev, Redis is a cache + Streams bus,
+    # not a system of record. Stream entries are rebuilt by replaying mutations
+    # or accepted as lost on `docker compose down`. Source of truth is Postgres.
     ports:
       - "6379:6379"
     healthcheck:
