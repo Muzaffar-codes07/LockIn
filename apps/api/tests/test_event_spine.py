@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
+from redis.asyncio import Redis as RealRedis
 
 from app.events.dlq import DLQRouter
+from app.events.streams import StreamRegistry
 from app.jobs.reaper import (  # noqa: F401  (IDLE_THRESHOLD_MS asserted indirectly)
     IDLE_THRESHOLD_MS,
     Reaper,
@@ -70,3 +73,59 @@ async def test_dlq_router_records_full_context() -> None:
     assert entry["error_class"] == "ValueError"
     assert entry["failure_reason"] == "schema mismatch"
     assert entry["failure_count"] == "4"
+
+
+# ---------------------------------------------------------------------------
+# Real-Redis integration tests (require docker-compose redis on localhost:6379)
+# ---------------------------------------------------------------------------
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/15")  # /15 = test db
+
+
+@pytest.fixture
+async def real_redis():
+    redis = RealRedis.from_url(REDIS_URL, decode_responses=True)
+    await redis.flushdb()
+    yield redis
+    await redis.flushdb()
+    await redis.aclose()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_consumer_group_resumption_no_dupes_no_drops(real_redis) -> None:
+    """Produce 10k entries, ack 5k, restart consumer, verify resume at 5001."""
+    await StreamRegistry(real_redis).bootstrap()
+    # Manual XADD (bypass typed publisher to keep test focused on stream semantics).
+    for i in range(10_000):
+        await real_redis.xadd("events:tasks", {"event_id": f"id-{i}", "data": "{}"}, maxlen=20_000)
+
+    # First consumer instance: ack first 5k.
+    acked: list[str] = []
+    while len(acked) < 5_000:
+        resp = await real_redis.xreadgroup(
+            "capture-svc", "consumer-A", {"events:tasks": ">"}, count=1000
+        )
+        for _stream, entries in resp:
+            for entry_id, _data in entries:
+                await real_redis.xack("events:tasks", "capture-svc", entry_id)
+                acked.append(entry_id)
+
+    # Simulate crash + restart with the same consumer name.
+    acked2: list[str] = []
+    while len(acked2) < 5_000:
+        resp = await real_redis.xreadgroup(
+            "capture-svc", "consumer-A", {"events:tasks": ">"}, count=1000
+        )
+        if not resp:
+            break
+        for _stream, entries in resp:
+            for entry_id, _data in entries:
+                await real_redis.xack("events:tasks", "capture-svc", entry_id)
+                acked2.append(entry_id)
+
+    info = await real_redis.xinfo_groups("events:tasks")
+    capture = next(g for g in info if g["name"] == "capture-svc")
+    assert capture["pending"] == 0
+    assert len(acked) + len(acked2) == 10_000
+    assert len(set(acked) & set(acked2)) == 0  # no dupes
