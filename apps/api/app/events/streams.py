@@ -11,7 +11,6 @@ Spec §3.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from typing import Literal
 
@@ -19,7 +18,9 @@ from pydantic import BaseModel
 from redis.asyncio import Redis
 from redis.exceptions import ResponseError
 
-logger = logging.getLogger(__name__)
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 DEFAULT_MAXLEN = 100_000  # spec §5 bend #6
 
@@ -89,9 +90,7 @@ class StreamRegistry:
             for group in spec.groups:
                 try:
                     await self._redis.xgroup_create(spec.name, group, id="$", mkstream=True)
-                    logger.info(
-                        "created consumer group", extra={"stream": spec.name, "group": group}
-                    )
+                    logger.info("created consumer group", stream=spec.name, group=group)
                 except ResponseError as e:
                     if "BUSYGROUP" not in str(e):
                         raise
