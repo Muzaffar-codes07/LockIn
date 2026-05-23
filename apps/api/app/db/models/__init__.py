@@ -6,6 +6,7 @@ for the same reason — see the note in ``alembic/env.py``.
 """
 
 from app.db.models.credential import WebauthnCredential  # noqa: F401
+from app.db.models.schedule_slot import ScheduleSlot  # noqa: F401
 from app.db.models.task import Task  # noqa: F401
 
-__all__ = ["Task", "WebauthnCredential"]
+__all__ = ["ScheduleSlot", "Task", "WebauthnCredential"]
