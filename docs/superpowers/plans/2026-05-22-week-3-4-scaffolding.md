@@ -4,17 +4,18 @@
 
 ---
 
-## Execution Status — Phases A-C complete (2026-05-23 checkpoint)
+## Execution Status — Phases A-E complete, HARD PAUSE for mid-slice review (2026-05-23)
 
-**Branch:** `feat/week-3-4-scaffolding` · **Completed:** Tasks 1-14 of 62 · **Resume from:** Task 15 (Phase D)
+**Branch:** `feat/week-3-4-scaffolding` · **Completed:** Tasks 1-26 of 62 · **Resume from:** Task 27 (Phase F — frontend scaffolding split)
 
 | Phase | Tasks | Status | Notes |
 |---|---|---|---|
 | A — Substrate | 1-5 | ✅ Complete | 9 commits incl. 4 review fixes. Caught: migration 0001 hypertable UNIQUE bug, `--no-verify` lockfile drift, `_uuid7()` hot-path inefficiency, redis ephemeral-by-design comment, legacy compose deprecation header. |
 | B — Migration baseline | 6-9 | ✅ Complete | 6 commits incl. 2 review fixes. Caught: `tenant_id` index source-of-truth ambiguity (fixed in `BaseEntityMixin`), global `set_updated_at()` function destroyed on partial downgrade (preserved). |
 | C — Domain tables (5 migrations) | 10-14 | ✅ Complete | 6 commits incl. 1 review fix. Column ordering drift in 0009/0010 fixed. Two reviewer claims rejected as false positives (`server_default="primary"` quoting, `ON DELETE CASCADE` on schedule_slots). |
-| D — Infra tables + Timescale + seed | 15-19 | ⏸ Pending | Resume here. |
-| E — Event spine | 20-26 | ⏸ Pending | Per-task review for 20-22 (EventPublisher refactor + StreamRegistry + XTRIM); phase-level for 23-26. Hard pause after Task 26 for mid-slice review with Md. |
+| D — Infra tables + Timescale + seed | 15-19 | ✅ Complete | 7 commits incl. 2 review fixes. Caught: Task 16 unused `UUID` import + suppressed-signal `noqa`, Task 18 composite PK `(id, occurred_at)` required by TimescaleDB (initial "no PK" caused ORM/DDL mismatch). Task 19 implementer worked through 3 live issues (asyncpg JSONB casting, refresh-aggregate AUTOCOMMIT, ruff S311 suppression). 1M-event seed validates aggregate latency <100ms + compression engagement. |
+| E — Event spine | 20-26 | ✅ Complete (mid-slice review pending) | 9 commits incl. 3 review fixes. Caught: Task 21 stdlib logging vs structlog (fixed), Task 24 missing DLQ logger (fixed), CI `pr.yml` ran tests without `-m "not slow"` (CRITICAL — fixed). **Open concern for review:** Task 25 resumption test uses `XREADGROUP ">"` for both reads, which exercises backlog-drain semantics rather than PEL crash-recovery. Assertions still pass; reviewer flagged as Important. |
+| **HARD PAUSE** | — | 🛑 **Here now** | Awaiting mid-slice review with Md before Phase F dispatch. |
 | F — Frontend scaffolding split | 27-30 | ⏸ Pending | Conditional on Day 4-5 review showing on-pace. |
 | G — API middleware | 31-37 | ⏸ Pending | |
 | H — Stub endpoints + OpenAPI CI | 38-40 | ⏸ Pending | |
