@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from uuid import UUID  # noqa: F401  (used implicitly by BaseEntityMixin)
 
 from sqlalchemy import (
     ARRAY,
