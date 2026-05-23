@@ -128,7 +128,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "S105", "S106"]
+"tests/*" = ["S101", "S105", "S106", "S603", "S607"]
 
 # ---------------------------------------------------------------------------
 # Mypy (type checker - strict for new code)
@@ -157,4 +157,7 @@ addopts = [
     "--strict-markers",
     "--cov=app",
     "--cov-report=term-missing",
+]
+markers = [
+    "integration: marks tests that require docker compose services",
 ]
