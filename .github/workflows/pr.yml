@@ -127,7 +127,9 @@ jobs:
       - run: uv sync --all-packages --extra dev
       - run: uv run --package lockin-api python -m ruff check apps/api
       - run: uv run --package lockin-api python -m mypy apps/api/app
-      - run: uv run --package lockin-api python -m pytest apps/api/tests
+      # `slow` marker excluded: long-running integration tests (e.g., 5min sleep
+      # for reaper-idle validation) run only on schedule or manual trigger, not on PRs.
+      - run: uv run --package lockin-api python -m pytest apps/api/tests -m "not slow"
 
   python-mcp:
     needs: detect

@@ -15,7 +15,10 @@ from datetime import UTC, datetime
 
 from redis.asyncio import Redis
 
+from app.core.logging import get_logger
 from app.events.streams import dlq_stream
+
+logger = get_logger(__name__)
 
 MAX_DELIVERIES = 3
 
@@ -49,4 +52,14 @@ class DLQRouter:
             "failure_count": str(failure_count),
             "original_payload": json.dumps(original_payload),
         }
-        return str(await self._redis.xadd(dlq_stream(source_stream, consumer_group), entry))
+        msg_id = str(await self._redis.xadd(dlq_stream(source_stream, consumer_group), entry))
+        logger.warning(
+            "dlq.routed",
+            source_stream=source_stream,
+            consumer_group=consumer_group,
+            original_id=original_id,
+            error_class=type(exc).__name__,
+            failure_count=failure_count,
+            dlq_msg_id=msg_id,
+        )
+        return msg_id
