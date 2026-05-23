@@ -5,6 +5,7 @@ Importing this package side-effects: every model module here is loaded so
 for the same reason — see the note in ``alembic/env.py``.
 """
 
+from app.db.models.behavior_event import BehaviorEvent  # noqa: F401
 from app.db.models.calendar_event import CalendarEvent  # noqa: F401
 from app.db.models.credential import WebauthnCredential  # noqa: F401
 from app.db.models.energy_log import EnergyLog  # noqa: F401
@@ -16,6 +17,7 @@ from app.db.models.schedule_slot import ScheduleSlot  # noqa: F401
 from app.db.models.task import Task  # noqa: F401
 
 __all__ = [
+    "BehaviorEvent",
     "CalendarEvent",
     "EnergyLog",
     "Explanation",
