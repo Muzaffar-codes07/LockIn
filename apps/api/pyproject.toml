@@ -161,4 +161,5 @@ addopts = [
 ]
 markers = [
     "integration: marks tests that require docker compose services",
+    "slow: long-running integration test (>1min); run in CI not on every local push",
 ]

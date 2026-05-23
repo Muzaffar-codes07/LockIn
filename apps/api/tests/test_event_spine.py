@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
@@ -129,3 +130,28 @@ async def test_consumer_group_resumption_no_dupes_no_drops(real_redis) -> None:
     assert capture["pending"] == 0
     assert len(acked) + len(acked2) == 10_000
     assert len(set(acked) & set(acked2)) == 0  # no dupes
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+@pytest.mark.asyncio
+async def test_reaper_unsticks_real_redis_entries(real_redis) -> None:
+    """Leave entries unacked, sleep past idle threshold, run reaper, verify retry-eligible.
+
+    Real wall clock — cannot be mocked because Redis tracks idle time server-side.
+    """
+    await StreamRegistry(real_redis).bootstrap()
+    for i in range(3):
+        await real_redis.xadd("events:tasks", {"event_id": f"id-{i}", "data": "{}"})
+    # Read without acking.
+    await real_redis.xreadgroup("capture-svc", "consumer-X", {"events:tasks": ">"}, count=3)
+    # Sleep 6 minutes (past 5-min idle threshold). Real wall clock; cannot be mocked.
+    await asyncio.sleep(310)
+
+    n = await Reaper(real_redis).sweep_once()
+    assert n >= 3
+
+    # After reaper resets idle to 0, a new XREADGROUP with the same consumer
+    # should re-deliver via the PEL.
+    pending_before = await real_redis.xpending("events:tasks", "capture-svc")
+    assert pending_before["pending"] == 3
