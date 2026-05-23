@@ -1,4 +1,11 @@
-﻿services:
+﻿# DEPRECATED — superseded by infra/dev/docker-compose.yml (Week 3-4 §1).
+# This file runs plain postgres:16-alpine with NO TimescaleDB extension,
+# which makes alembic migration 0001+ fail. The canonical dev substrate is
+# at infra/dev/docker-compose.yml (timescale/timescaledb:2.17.2-pg16 on :5433).
+# Kept for reference only; will be removed once nothing in the repo or scripts
+# references it. Do NOT use for new development.
+
+services:
   postgres:
     image: postgres:16-alpine
     environment:

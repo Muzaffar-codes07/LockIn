@@ -12,8 +12,13 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 def _uuid7() -> UUID:
-    """UUID v7 generator — time-ordered, used as ORM default on hot tables."""
-    return UUID(str(uuid_utils.uuid7()))
+    """UUID v7 generator — time-ordered, used as ORM default on hot tables.
+
+    Hot path: this fires on every ORM INSERT for behavior_events / tasks /
+    mood_logs / energy_logs, so we go through .bytes (one alloc) rather than
+    the str roundtrip (two allocs).
+    """
+    return UUID(bytes=uuid_utils.uuid7().bytes)
 
 
 class BaseEntityMixin:
@@ -27,6 +32,7 @@ class BaseEntityMixin:
     id: Mapped[UUID] = mapped_column(
         PgUUID(as_uuid=True),
         primary_key=True,
+        nullable=False,
         server_default=text("gen_random_uuid()"),
     )
     user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
@@ -49,6 +55,7 @@ class UUIDv7Mixin:
     id: Mapped[UUID] = mapped_column(
         PgUUID(as_uuid=True),
         primary_key=True,
+        nullable=False,
         default=_uuid7,
         server_default=text("gen_random_uuid()"),
     )
