@@ -35,6 +35,9 @@ dependencies = [
     # HTTP client (Google Calendar, LLM providers)
     "httpx>=0.28",
 
+    # UUID generation (Rust-backed UUIDv7)
+    "uuid-utils==0.10.0",
+
     # Observability
     "opentelemetry-api>=1.28",
     "opentelemetry-sdk>=1.28",
