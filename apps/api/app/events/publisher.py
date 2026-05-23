@@ -1,24 +1,11 @@
-"""Redis Streams publisher. Always called by services after a successful DB commit."""
+"""Backwards-compat re-export. Prefer importing from app.events.streams."""
 
-from pydantic import BaseModel
 from redis.asyncio import Redis
 
 from app.core.config import settings
+from app.events.streams import EventPublisher, StreamRegistry
 
-
-class EventPublisher:
-    def __init__(self, redis: Redis) -> None:
-        self._redis = redis
-
-    async def publish(self, stream: str, event: BaseModel) -> str:
-        """Publish any pydantic event model to a Redis Stream.
-
-        Accepts BaseModel rather than a LockIn-specific base so this publisher
-        is decoupled from the event-package class hierarchy. The canonical
-        event types live in ``lockin_events`` and all inherit from BaseModel.
-        """
-        message_id = await self._redis.xadd(stream, {"data": event.model_dump_json()})
-        return str(message_id)
+__all__ = ["EventPublisher", "StreamRegistry", "get_redis"]
 
 
 def get_redis() -> Redis:

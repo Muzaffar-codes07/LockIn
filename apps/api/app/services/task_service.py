@@ -53,7 +53,7 @@ class TaskService:
                 },
             }
         )
-        await publisher.publish(STREAM_TASKS, event)
+        await publisher.publish_behavioral(STREAM_TASKS, event)
         return task
 
     async def list_for_user(self, user_id: UUID) -> list[Task]:

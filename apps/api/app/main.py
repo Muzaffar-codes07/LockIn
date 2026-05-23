@@ -13,6 +13,8 @@ from app.core.config import settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
 from app.core.observability import configure_observability
+from app.events.publisher import get_redis
+from app.events.streams import StreamRegistry
 
 
 @asynccontextmanager
@@ -21,6 +23,12 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     logger = get_logger("app.startup")
     logger.info("startup", app=settings.APP_NAME)
     try:
+        registry_redis = get_redis()
+        try:
+            await StreamRegistry(registry_redis).bootstrap()
+            logger.info("event streams bootstrapped")
+        finally:
+            await registry_redis.aclose()
         yield
     finally:
         logger.info("shutdown", app=settings.APP_NAME)
