@@ -9,6 +9,7 @@ from app.db.models.calendar_event import CalendarEvent  # noqa: F401
 from app.db.models.credential import WebauthnCredential  # noqa: F401
 from app.db.models.energy_log import EnergyLog  # noqa: F401
 from app.db.models.explanation import Explanation  # noqa: F401
+from app.db.models.idempotency_key import IdempotencyKey  # noqa: F401
 from app.db.models.mood_log import MoodLog  # noqa: F401
 from app.db.models.oauth_token import OAuthToken  # noqa: F401
 from app.db.models.schedule_slot import ScheduleSlot  # noqa: F401
@@ -18,6 +19,7 @@ __all__ = [
     "CalendarEvent",
     "EnergyLog",
     "Explanation",
+    "IdempotencyKey",
     "MoodLog",
     "OAuthToken",
     "ScheduleSlot",
