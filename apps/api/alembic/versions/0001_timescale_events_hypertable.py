@@ -49,15 +49,19 @@ def upgrade() -> None:
 
     op.create_index("ix_events_user_occurred", "events", ["user_id", "occurred_at"])
     op.create_index("ix_events_type_occurred", "events", ["event_type", "occurred_at"])
-    op.create_unique_constraint(
-        "uq_events_user_idem",
+    # TimescaleDB hypertables require all unique indexes to include the
+    # partitioning column (occurred_at).  A plain index on
+    # (user_id, client_idempotency_key) is used instead; application-layer
+    # deduplication enforces idempotency semantics.
+    op.create_index(
+        "ix_events_user_idem",
         "events",
         ["user_id", "client_idempotency_key"],
     )
 
 
 def downgrade() -> None:
-    op.drop_constraint("uq_events_user_idem", "events", type_="unique")
+    op.drop_index("ix_events_user_idem", table_name="events")
     op.drop_index("ix_events_type_occurred", table_name="events")
     op.drop_index("ix_events_user_occurred", table_name="events")
     op.drop_table("events")
