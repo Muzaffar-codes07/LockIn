@@ -2,6 +2,40 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+---
+
+## Execution Status — Phases A-C complete (2026-05-23 checkpoint)
+
+**Branch:** `feat/week-3-4-scaffolding` · **Completed:** Tasks 1-14 of 62 · **Resume from:** Task 15 (Phase D)
+
+| Phase | Tasks | Status | Notes |
+|---|---|---|---|
+| A — Substrate | 1-5 | ✅ Complete | 9 commits incl. 4 review fixes. Caught: migration 0001 hypertable UNIQUE bug, `--no-verify` lockfile drift, `_uuid7()` hot-path inefficiency, redis ephemeral-by-design comment, legacy compose deprecation header. |
+| B — Migration baseline | 6-9 | ✅ Complete | 6 commits incl. 2 review fixes. Caught: `tenant_id` index source-of-truth ambiguity (fixed in `BaseEntityMixin`), global `set_updated_at()` function destroyed on partial downgrade (preserved). |
+| C — Domain tables (5 migrations) | 10-14 | ✅ Complete | 6 commits incl. 1 review fix. Column ordering drift in 0009/0010 fixed. Two reviewer claims rejected as false positives (`server_default="primary"` quoting, `ON DELETE CASCADE` on schedule_slots). |
+| D — Infra tables + Timescale + seed | 15-19 | ⏸ Pending | Resume here. |
+| E — Event spine | 20-26 | ⏸ Pending | Per-task review for 20-22 (EventPublisher refactor + StreamRegistry + XTRIM); phase-level for 23-26. Hard pause after Task 26 for mid-slice review with Md. |
+| F — Frontend scaffolding split | 27-30 | ⏸ Pending | Conditional on Day 4-5 review showing on-pace. |
+| G — API middleware | 31-37 | ⏸ Pending | |
+| H — Stub endpoints + OpenAPI CI | 38-40 | ⏸ Pending | |
+| I — Calendar OAuth + migration 0014 | 41-44 | ⏸ Pending | |
+| J — Calendar polling sync | 45-48 | ⏸ Pending | |
+| K — Calendar UX + tests | 49-53 | ⏸ Pending | |
+| L — Frontend integration | 54-57 | ⏸ Pending | |
+| M — DoD + smoke + handoff | 58-62 | ⏸ Pending | |
+
+**Substrate state at checkpoint:**
+- Docker compose at `infra/dev/docker-compose.yml` runs `timescale/timescaledb:2.17.2-pg16` on `:5433`, `redis:7.4-alpine` on `:6379`
+- Alembic head: `0010`. Tables created: `events` (legacy from 0001 — pending rename to `behavior_events` in Task 18), `webauthn_credentials`, `tasks` (expanded), `schedule_slots`, `mood_logs`, `energy_logs`, `explanations`, `calendar_events`
+- Pre-commit hook stack works against this branch (mypy + ruff + ruff-format + detect-secrets + check-yaml)
+- Test suite: 9 task + 1 migration chain test, all green; 27 total pytest tests on substrate (existing Slice 0)
+
+**Carry-forward / known issues to resolve later in slice:**
+- Migration 0001 table is named `events`, not `behavior_events`. Task 18 anticipates this — `0013` will need to either rename the table or drop+recreate.
+- `lockin_test` database exists but the migration-reversibility test currently runs against `lockin_dev` (destroying any dev data on `downgrade base`). Future hardening: route to `lockin_test` via env-var injection into the alembic subprocess.
+
+---
+
 **Goal:** Ship the six scaffolding deliverables from the Week 3-4 handoff — Postgres tables + Alembic chain, TimescaleDB hypertable + continuous aggregates, Redis Streams event spine, API gateway middleware stack, Google Calendar read-only polling sync, and the responsive frontend shell — leaving Week 5-6 ready to wire the capture loop without re-scaffolding.
 
 **Architecture:** Single feature branch `feat/week-3-4-scaffolding`, six logical commits matching the six deliverables, squash-merge at end-of-slice. Local-first pragmatic substrate (Docker `timescale/timescaledb:2.17.2-pg16` on `:5433`, Redis on `:6379`). All schema changes go through Alembic (including APScheduler's jobstore via migration `0014`). Event spine separates **behavioral** (feeds `behavior_events` hypertable) from **operational** (stream-only) at the `EventPublisher` API surface. Calendar sync is APScheduler-driven polling with a fenced Redis lock and `asyncio.timeout(280)` inside the lock window.
