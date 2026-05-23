@@ -25,7 +25,7 @@ class Task(Base):
         server_default=sa.text("gen_random_uuid()"),
     )
     user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
-    tenant_id: Mapped[UUID | None] = mapped_column(PgUUID(as_uuid=True), nullable=True, index=True)
+    tenant_id: Mapped[UUID | None] = mapped_column(PgUUID(as_uuid=True), nullable=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     source: Mapped[str] = mapped_column(String(16), nullable=False, server_default="keyboard")
     status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="captured")

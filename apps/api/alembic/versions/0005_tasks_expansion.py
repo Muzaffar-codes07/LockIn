@@ -56,7 +56,11 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.execute("DROP TRIGGER IF EXISTS tasks_set_updated_at ON tasks;")
-    op.execute("DROP FUNCTION IF EXISTS set_updated_at();")
+    # Intentionally do NOT drop set_updated_at(): subsequent tables
+    # (mood_logs, energy_logs, schedule_slots, etc.) reuse it via their own
+    # BEFORE UPDATE triggers. Dropping it here would cascade-break those
+    # triggers on any partial downgrade. The function is effectively a
+    # shared utility owned by the schema, not by this migration.
     op.drop_constraint("ck_tasks_status", "tasks", type_="check")
     op.drop_column("tasks", "status")
     op.drop_column("tasks", "version")

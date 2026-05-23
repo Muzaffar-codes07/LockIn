@@ -36,7 +36,9 @@ class BaseEntityMixin:
         server_default=text("gen_random_uuid()"),
     )
     user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
-    tenant_id: Mapped[UUID | None] = mapped_column(PgUUID(as_uuid=True), nullable=True, index=True)
+    # Index on tenant_id is declared in the per-table migration, not on the
+    # ORM column. Migration is the source of truth for index DDL.
+    tenant_id: Mapped[UUID | None] = mapped_column(PgUUID(as_uuid=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
