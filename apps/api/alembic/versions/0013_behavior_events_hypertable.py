@@ -18,11 +18,12 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # Use raw SQL for table creation: Alembic's create_table emits a UNIQUE index
-    # on `id` (the PK), but TimescaleDB refuses unique indexes that don't include
-    # the partition column (occurred_at). We drop the PK constraint immediately
-    # after hypertable creation and re-add it as a non-unique index so id remains
-    # a fast lookup column without violating TimescaleDB partitioning rules.
+    # Composite PRIMARY KEY (id, occurred_at) — matches the migration 0001
+    # precedent and the only PK shape TimescaleDB accepts for hypertables.
+    # The partition column (occurred_at) must be part of any unique constraint,
+    # so we make it part of the PK. id alone has no DB-level uniqueness but
+    # is uuid7 (probabilistically unique); the composite PK gives Postgres
+    # the enforcement guarantee the ORM expects.
     op.execute(
         """
         CREATE TABLE behavior_events (
@@ -31,7 +32,8 @@ def upgrade() -> None:
             event_type  VARCHAR(64) NOT NULL,
             occurred_at TIMESTAMPTZ NOT NULL,
             payload     JSONB       NOT NULL,
-            created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+            PRIMARY KEY (id, occurred_at)
         );
         """
     )
@@ -39,8 +41,6 @@ def upgrade() -> None:
         "SELECT create_hypertable('behavior_events', 'occurred_at', "
         "chunk_time_interval => INTERVAL '1 month');"
     )
-    # After hypertable creation, add a non-unique index on id for fast point lookups.
-    op.execute("CREATE INDEX ix_behavior_events_id ON behavior_events (id);")
     op.execute(
         "CREATE INDEX ix_behavior_events_user_type_occurred "
         "ON behavior_events (user_id, event_type, occurred_at DESC);"
@@ -104,5 +104,4 @@ def downgrade() -> None:
     op.execute("DROP MATERIALIZED VIEW IF EXISTS daily_task_completions CASCADE;")
     op.execute("SELECT remove_compression_policy('behavior_events', if_exists => true);")
     op.execute("DROP INDEX IF EXISTS ix_behavior_events_user_type_occurred;")
-    op.execute("DROP INDEX IF EXISTS ix_behavior_events_id;")
     op.drop_table("behavior_events")
